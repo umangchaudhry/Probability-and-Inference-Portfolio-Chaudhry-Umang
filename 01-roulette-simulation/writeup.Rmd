@@ -193,12 +193,12 @@ A plot of the gamblers winnings or losses over time over a series of wagers at t
 ``` {r earnings_over_time, include=TRUE}
 #WagerNo/Earnings
 
-budget <- rep(NA,20)
+earnings_over_time <- rep(NA,20)
 for(a in 1:20) {
-  budget[a] <- one_series(B = 200, W = 300, L = 1000, M = 100)[a*10]
+  earnings_over_time[a] <- one_series(B = 200, W = 300, L = 1000, M = 100)[a*10]
 }
 
-plot (seq(10,200,10), budget-200, xlab = "Number of Plays", ylab = "Earnings" )
+plot (seq(10,200,10), earnings_over_time-200, xlab = "Number of Plays", ylab = "Earnings" )
 
 ```
 
