@@ -29,7 +29,7 @@ In the first few iterations of the Martingale strategy, it seems like it always 
 
 ## Programming the Simulation
 
-First, we need a function that runs a single play of the Martingale strategy. This function will take in a state list, which are the preset conditions under which the game is being played, spins the roulette wheel and returns updated values of these present conditions, or operating characteristics, following that single play of the game. 
+First, we need a function that runs a single play of the Martingale strategy. A function has inputs called parameters which lead to different outputs. This function will take in a state list, which are the preset conditions under which the game is being played, spins the roulette wheel and returns updated values of these present conditions, or operating characteristics, following that single play of the game. 
 ```{r one_play, include=TRUE}
 
 #' A single play of the Martingale strategy
@@ -177,7 +177,7 @@ for(j in seq_along(walk_out_money)){
 }
 
 # Walk out money distribution
-hist(walk_out_money, breaks = 100)
+hist(walk_out_money, breaks = 100, xlab = "Earnings", main = "Histogram of average earnings per session of roulette")
 
 # Estimated probability of walking out with extra cash
 mean(walk_out_money > 200)
@@ -211,11 +211,11 @@ While this strategy might be effective sometimes, it does not gurantee success g
 
 ```{r single_simulation , include=TRUE}
 #Single Series - Help the reader understand how we're approaching the problem
-set.seed(1)
+set.seed(3)
 s1 <- one_series(B = 200, W = 300, L = 1000, M = 100) 
 s1
-plot(s1, type = "b") #Linear gains, exponential losses
-plot(s1[1:10], type = "o")
+plot(s1, type = "b", xlab = "Number of plays", ylab = "Earnings") #Linear gains, exponential losses
+# plot(s1[1:10], type = "o")
 
 ```
 
@@ -270,15 +270,17 @@ stopping_plays <- rep(NA, 1000) #Maximum possible/allowed turns
    stopping_plays[i] <- length(one_series(B = 200, W = 300, L = 1000, M = 100))
  }
 mean(stopping_plays)
+
+hist(stopping_plays, breaks = 50, xlab = "Number of plays before stopping", main = "Histogram of average number of plays before stopping")
 ```
 
-This function runs multiple series of the games, and takes the mean of the average length (number of plays) at which the games were stopped. Most series stop at around 200 plays given these parameters. 
+This function runs multiple series of the games, and takes the mean of the average length (number of plays) at which the games were stopped. Most series stop at around 200 plays given these parameters as can be seen from the histogram. There are only a few instances where the number of plays gets close to the maximum number of plays allowed. 
 
 ## Limitations and Uncertainties
 
 Simulations themselves are approxiamtions of a real scenario and are limited in scope to the number of times the simulation is run. This simulation only runs a finite number of times on certain set parameters. More iterations with different combinations to account for all scenarios would make this simulation more accurate. The sample size of this simulation is also small, and therefore adds uncertainties. 
 
-There are also some simplifications in the stopping rule and next wagers, where we choose the minimum of the budget, maximum bet and number of plays. In a more realistic scenario, it is possible that we decide to dip into a extra cash fund for that very last play if these conditions are met. Another simplification that this simulation creates is the fact that we are assuming the player is will to play until they are bankrupt. In more realistic scenarios, it is possible that people my choose to stop playing once their budget has fallen to a certain amount. 
+There are also some simplifications in the stopping rule and next wagers, where we choose the minimum of the budget, maximum bet and number of plays. In a more realistic scenario, it is possible that we decide to dip into a extra cash fund for that very last play if these conditions are met. Another simplification that this simulation creates is the fact that we are assuming the player is will to play until they are bankrupt. In more realistic scenarios, it is possible that people my choose to stop playing once their budget has fallen to a certain amount. This is also a simplification of a game of roulette since we are only testing for one specific strategy. We could input a parameter called "strategy" that could be updated to reflect different strategies. However in the case of this particular project we have hardcoded the Martingale strategy. 
 
 
 ``` {r class_notes, include=FALSE}
