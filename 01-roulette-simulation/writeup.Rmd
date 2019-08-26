@@ -250,7 +250,7 @@ This simulation can also be used to determine the average number of plays that t
 
 ``` {r average_plays_before_stopping, include=TRUE}
 #Estimated average plays before stopping
-stopping_plays <- rep(NA, 1000)
+stopping_plays <- rep(NA, 1000) #Maximum possible/allowed turns 
  for(i in seq_along(stopping_plays)){
    stopping_plays[i] <- length(one_series(B = 200, W = 300, L = 1000, M = 100))
  }
