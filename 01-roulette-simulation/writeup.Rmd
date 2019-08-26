@@ -164,7 +164,7 @@ get_last <- function(x) x[length(x)]
 
 ```
 
-The above function is a helper function that gives the very last value of a varaible in the resutl of any function. 
+The above function is a helper function that gives the very last value of a variable in the result of any function. 
 
 We can now run a simulation, that runs multiple series of the games of roulette following the Martingale strategy to determine how effective it is in always resulting in a profit, given the set parameters. 
 
@@ -187,7 +187,7 @@ mean(walk_out_money - 200)
 ```
 
 
-The above code runs a simulation of the function running a series of plays until stopping conditions are met. The code outputs the money the player walks out with at the end of the repeated simulations. As the result of each play is determined by a random binomial distribution, the results of each run of this simulation varies each time. The amount of money the player walks out with is stored in a data frame, and can then be used to determine the probability of walking out with extra cash, and can also be used to determine the average earnings at the end of 'n' simulations. 
+The above code runs a simulation of the function running a series of plays until stopping conditions are met. The code outputs the money the player walks out with at the end of the repeated simulations. As the result of each play is determined by a random binomial distribution, the results of each run of this simulation varies each time. Using the set.seed() function, the same results will be output for the given seed to allow for easier analysis. The amount of money the player walks out with is stored in a data frame, and can then be used to determine the probability of walking out with extra cash, and can also be used to determine the average earnings at the end of 'n' simulations. 
 
 As can be seen from the results of the run of the simulation, the estimated probability of walking out with extra cash is always somewhere around 50%, and the estimated earnings are all almost negative, as the stopping conditions were met before a winning wager was made. 
 
@@ -258,6 +258,8 @@ for(j in 1:10){
 }
 plot(x=seq(10,100,10), y=walk_out_money4, xlab = "Number of Plays", ylab = "Earnings", type = "o")
 ```
+
+The variables are changed multiple times, checking what would happen as they change, using a for loop that iterates a set number of times to give multiple results of the money the player walks out with. 
 
 It can be seen from the plots above that changes in each of these three input parameters, or operating characteristics leads to some changes in the resulting output. Generally, the greater the difference between your budget and the winning threshold, the higher the chance of you losing a lot more money, since the number of plays required to reach the winning threshold is a lot higher and the amount of money being lost increases exponentially with the number of plays, while the earnings stay linear.  
 
