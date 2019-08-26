@@ -550,7 +550,7 @@ plot(x=seq(10,100,10), y=walk_out_money4, xlab = &quot;Number of Plays&quot;, yl
 <p>It can be seen from the plots above that changes in each of these three input parameters, or operating characteristics leads to some changes in the resulting output.</p>
 <p>This simulation can also be used to determine the average number of plays that take place under these set condition before the game is stopped.</p>
 <pre class="r"><code>#Estimated average plays before stopping
-stopping_plays &lt;- rep(NA, 1000)
+stopping_plays &lt;- rep(NA, 1000) #Maximum possible/allowed turns 
  for(i in seq_along(stopping_plays)){
    stopping_plays[i] &lt;- length(one_series(B = 200, W = 300, L = 1000, M = 100))
  }
