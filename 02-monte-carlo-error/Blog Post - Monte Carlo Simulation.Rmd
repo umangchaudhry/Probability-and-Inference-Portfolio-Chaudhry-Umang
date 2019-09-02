@@ -1,0 +1,108 @@
+---
+title: "Blog Post - Monte Carlo Simulation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::knit_hooks$set(inline = function(x) { knitr:::format_sci(x, 'md')})
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+
+# This section loads necessary R libraries and sources scripts that define 
+# useful functions format_md.
+# setup chunk copied from an earlier project of mine, and has some extra libraries. 
+
+library(pacman)
+library(viridis)
+options(tigris_use_cache = TRUE)
+p_load(tidyverse, httr, rio, geojson, tigris, mapview, tidycensus, geojsonio, jsonlite, stringr, sf, broom)
+
+```
+
+## Introduction
+
+```{r}
+#R <- 500 #replicates
+#p <- .3 #probability of interest
+#rbinom(1, R, p)
+#Gives total number of success in R draws. 
+#This creates an array of 1s and 0s called ‘out’. We use this to estimate p’hat’ = mean(out)
+# = Sum (out) / R
+
+#for (i in seq_along(1:15)) {
+#  R[i] <- 2^i
+#}
+
+
+R <- 2^(seq_along(1:15))
+p <- c(0.1 , 0.5, 0.10, 0.25, 0.50)
+
+p_hat <- matrix(NA, length(R), length(p))
+abs_error <- rel_error <- matrix(NA, length(R), length(p))
+
+for (i in 1:length(p)) {
+  for (j in 1:length(R)) {
+    #p_hat[j,i] <- rbinom(1,R[j],p[i])/R[j]
+    abs_error[j,i] <- mean(abs(p[i]-(rbinom(100000,R[j],p[i])/R[j])))
+    rel_error[j,i] <- abs_error[j,i]/p[i]
+  }
+}
+
+abs_error
+rel_error
+
+#hist(abs_error[1,]) 
+#abline(v = mean(abs_error), lwd = 3, col = "blue")
+
+plot(1:15, abs_error[,5],axes=FALSE,type="l",col="orange",xlab="N log 2",ylab= "Absolute Error")
+axis(1,1:15,R)
+axis(2)
+lines(1:15, abs_error[,4], col= "red")
+lines(1:15, abs_error[,3], col= "blue")
+lines(1:15, abs_error[,2], col= "green")
+lines(1:15,abs_error[,1],col= "purple")
+
+plot(1:15, rel_error[,5],axes=FALSE, type="l",col="orange",xlab="N log 2",ylab= "Relative Error")
+axis(1,1:15,R)
+axis(2)
+lines(1:15, rel_error[,4], col= "red")
+lines(1:15, rel_error[,3], col= "blue")
+lines(1:15, rel_error[,2], col= "green")
+lines(1:15, rel_error[,1],col= "purple")
+
+
+
+#empty plot and then use lines()
+
+#p_hat <- rbinom(1,R,p) / R 
+#abs_error <- abs(p - p_hat) #= 0.028 #(absolute error for that replicate)
+#abs_error
+#rel_error <- abs_error/p #= 0.09333333
+#rel_error
+#What if we want to calculate the mean of the errors over lots of simulations
+
+#USE a for loop 
+#abs_error <- rel_error <- rep(NA, 100) #using pre-allocation, more computationally efficient
+#for (i in seq_along(abs_error)) { #seq_along because don’t want to have to code the length of the simulation multiple times
+#p_hat <- rbinom(1,R,p)/R
+#abs_error[i] <- abs(p-p_hat) #looped function
+#rel_error[i] <- abs_error[i]/p
+#}
+
+#hist(abs_error, breaks = 100)
+#abline(v = mean (abs_error), lwd = 3, col = "blue") #add reference line
+
+#Also have a line for the 95th percentile/quantile - worst case scenario for your error - more helpful in understanding the errors of your simulation
+
+#Min max loss/ minimizing the min max - while making decisions of what algorithm to use, we look at mean performance. Sometimes we are more interested in the worst case scenario. Minimization of the maximum possible loss. 
+
+#ALTERNATIVE WAY
+
+#p_hat <- rbinom(100000, R, p) / R #100,000 binomial Rs of size R with probability P
+#creates all the P_hats with the for loop in one array
+#Abs_error <- abs(p-p_hat) #Vectorized function
+#Rel_error <- abs_error/p
+
+#hist (abs_error, breaks = 100) #same histogram as before 
+```
+
