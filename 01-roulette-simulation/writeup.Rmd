@@ -171,7 +171,7 @@ We can now run a simulation, that runs multiple series of the games of roulette 
 ```{r simulation, include=TRUE}
 # Simulation
 set.seed(764) #randomly set seed command
-walk_out_money <- rep(NA, 100)
+walk_out_money <- rep(NA, 10000)
 for(j in seq_along(walk_out_money)){
   walk_out_money[j] <- one_series(B = 200, W = 300, L = 1000, M = 100) %>% get_last
 }
@@ -227,36 +227,36 @@ Changing the parameters of simulation and the inputs to the functions does have 
 #Changing a variable L
 walk_out_money1 <- rep(NA, 10)
 for(j in 1:10){
-  walk_out_money1[j] <- one_series(B = 200, W = 300, L = j*100, M = 100) %>% get_last()
+  walk_out_money1[j] <- replicate(1000, one_series(B = 200, W = 300, L = j*100, M = 100) %>% mean())  %>%  get_last()
 }
-plot(x=seq(100,1000,100), y=walk_out_money1, xlab = "Number of Plays", ylab = "Earnings", type = "o")
+plot(x=seq(100,1000,100), y=walk_out_money1-200, xlab = "Number of Plays", ylab = "Earnings", type = "o")
 ```
 
 ``` {r changing_variableM, include=TRUE}
 #Changing a variable M
 walk_out_money2 <- rep(NA, 10)
 for(j in 1:10){
-  walk_out_money2[j] <- one_series(B = 200, W = 300, L = 1000, M = j*10) %>% get_last()
+  walk_out_money2[j] <- replicate(1000, one_series(B = 200, W = 300, L = 1000, M = j*10) %>% mean()) %>% get_last() 
 }
-plot(x=seq(10,100,10), y=walk_out_money2, xlab = "Number of Plays", ylab = "Earnings", type = "o")
+plot(x=seq(10,100,10), y=walk_out_money2-200, xlab = "Number of Plays", ylab = "Earnings", type = "o")
 ```
 
 ``` {r changing_variableB, include=TRUE}
 #Changing a variable B
 walk_out_money3 <- rep(NA, 10)
 for(j in 1:10){
-  walk_out_money3[j] <- one_series(B = j*20, W = 300, L = 1000, M = 100) %>% get_last()
+  walk_out_money3[j] <- replicate(100, one_series(B = j*20, W = 300, L = 1000, M = 100) %>% mean()) %>% get_last()
 }
-plot(x=seq(10,100,10), y=walk_out_money3, xlab = "Number of Plays", ylab = "Earnings", type = "o")
+plot(x=seq(10,100,10), y=walk_out_money3-200, xlab = "Number of Plays", ylab = "Earnings", type = "o")
 ```
 
 ``` {r changing_variableW, include=TRUE}
 #Changing a variable W
 walk_out_money4 <- rep(NA, 10)
 for(j in 1:10){
-  walk_out_money4[j] <- one_series(B = 200, W = j*30, L = 1000, M = 100) %>% get_last()
+  walk_out_money4[j] <- replicate(1000, one_series(B = 200, W = j*30, L = 1000, M = 100) %>% mean()) %>% get_last()
 }
-plot(x=seq(10,100,10), y=walk_out_money4, xlab = "Number of Plays", ylab = "Earnings", type = "o")
+plot(x=seq(10,100,10), y=walk_out_money4-200, xlab = "Number of Plays", ylab = "Earnings", type = "o")
 ```
 
 The variables are changed multiple times, checking what would happen as they change, using a for loop that iterates a set number of times to give multiple results of the money the player walks out with. 
