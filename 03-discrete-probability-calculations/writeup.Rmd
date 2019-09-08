@@ -1,0 +1,5 @@
+---
+title: "Blog Post - Discrete Probability Calculations"
+output: html_document
+---
+
