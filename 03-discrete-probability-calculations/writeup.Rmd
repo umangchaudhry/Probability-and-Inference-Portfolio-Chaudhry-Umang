@@ -3,3 +3,103 @@ title: "Blog Post - Discrete Probability Calculations"
 output: html_document
 ---
 
+```{r setup, include=FALSE}
+
+knitr::knit_hooks$set(inline = function(x) { knitr:::format_sci(x, 'md')})
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+
+# This section loads necessary R libraries and sources scripts that define 
+# useful functions format_md.
+
+library(viridis)
+library(ggplot2)
+library(tidyverse)
+
+```
+
+## How often does the better team win the World Series?
+
+The world series is a best of 7 tournament between the American and National Leagues of Major League Baseball. In this post, we will take a look at discrete probability calculations, in the context of the world series. We will first establish the setup for these calculations and lay out any assumptions being followed in this setup. Then we will use the rules of probability and discrete probability functions to answer a set of questions. 
+
+Before we describe the setup, we should keep in mind some important rules of probability:
+
+1. p(A or B) = p(A) + p(B) - p(A and B)
+    + note: p(A and B) = 0 when the events are mutually exclusive
+
+2. p(A and B) = p(A) * p(B)
+
+3. Bayes' Theorem: 
+
+<center>
+
+$p(A|B) =$$\frac{p((B|A)*p(A))}{p(B)}$
+
+</center>
+
+
+### Setup:
+
+1.  Suppose that the Braves and the Yankees are teams competing in the
+    World Series.
+2.  Suppose that in any given game, the probability that the Braves win
+    is *P*<sub>*B*</sub> and the probability that the Yankees win is
+    *P*<sub>*Y*</sub> = 1 − *P*<sub>*B*</sub>.
+    
+### Questions:
+
+1.  What is the probability that the Braves win the World Series given
+    that *P*<sub>*B*</sub> = 0.55?
+
+```{r}
+dnbinom(0,4,.55) + dnbinom(1,4,.55) + dnbinom(2,4,.55) + dnbinom(3,4,.55)
+```
+    
+    
+2.  What is the probability that the Braves win the World Series given
+    that *P*<sub>*B*</sub> = *x*? This will be a figure with
+    *P*<sub>*B*</sub> on the x-axis and *P*(Braves win World Series) on
+    the y-axis.
+    
+```{r}
+probability <- c(0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
+pwin <- rep(NA,6)
+
+pwin[1] <- dnbinom(0,4,.5) + dnbinom(1,4,.5) + dnbinom(2,4,.5) + dnbinom(3,4,.5)
+pwin[2] <- dnbinom(0,4,.6) + dnbinom(1,4,.6) + dnbinom(2,4,.6) + dnbinom(3,4,.6)
+pwin[3] <- dnbinom(0,4,.7) + dnbinom(1,4,.7) + dnbinom(2,4,.7) + dnbinom(3,4,.7)
+pwin[4] <- dnbinom(0,4,.8) + dnbinom(1,4,.8) + dnbinom(2,4,.8) + dnbinom(3,4,.8)
+pwin[5] <- dnbinom(0,4,.9) + dnbinom(1,4,.9) + dnbinom(2,4,.9) + dnbinom(3,4,.9)
+pwin[6] <- dnbinom(0,4,1.0) + dnbinom(1,4,1.0) + dnbinom(2,4,1.0) + dnbinom(3,4,1.0)
+
+plot(x = probability, y = pwin, ylim = c(0,1), xlab = "Probability of the Braves winning a head-to-head matchup", ylab = "Pr(Win World Series)", type = "o", pch = 16)
+```
+    
+    
+    
+3.  Suppose one could change the World Series to be best-of-9 or some
+    other best-of-X series. What is the shortest series length so that
+    *P*(Braves win World Series\|*P*<sub>*B*</sub> = .55) ≥ 0.8
+    
+```{r}
+
+```
+    
+    
+4.  What is the shortest series length so that
+    *P*(Braves win World Series\|*P*<sub>*B*</sub> = *x*) ≥ 0.8? This
+    will be a figure (see below) with *P*<sub>*B*</sub> on the x-axis
+    and series length is the y-axis.
+    
+```{r}
+
+```
+    
+5.  Calculate
+    *P*(*P*<sub>*B*</sub> = 0.55\|Braves win World Series in 7 games)
+    under the assumption that either *P*<sub>*B*</sub> = 0.55 or
+    *P*<sub>*B*</sub> = 0.45. Explain your solution.
+
+```{r}
+
+```
+
