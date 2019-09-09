@@ -36,8 +36,9 @@ $p(A|B) =$$\frac{p((B|A)*p(A))}{p(B)}$
 
 </center>
 
+Using these three rules of probability, we can break down complex probability problems in smaller units that are easier to solve. 
 
-### Setup:
+### The Setup:
 
 1.  Suppose that the Braves and the Yankees are teams competing in the
     World Series.
@@ -45,21 +46,27 @@ $p(A|B) =$$\frac{p((B|A)*p(A))}{p(B)}$
     is *P*<sub>*B*</sub> and the probability that the Yankees win is
     *P*<sub>*Y*</sub> = 1 − *P*<sub>*B*</sub>.
     
+    
 ### Questions:
 
 1.  What is the probability that the Braves win the World Series given
     that *P*<sub>*B*</sub> = 0.55?
+    
+For the Braves to win the World Series, they have to win a total of 4 out of the 7 games played between the two teams. The probabbility that the Braves win any single game between them and the Yankees is 0.55. The dnbinom() function in R, gives the probability of the number of failues before the K^th^ success. Adding up the probabilities of there being 0, 1, 2 and 3 failures before the successful games up to the 4th success and the title of the World Series, will determine the probability of winning the World Series given that the probability of winning any single game is 0.55.The dnbinom(x, size, prob) function takes in the three parameters, where size is the target number of successes, x is a vector of quantiles and prob is the probability of success in each trial. 
 
 ```{r}
 dnbinom(0,4,.55) + dnbinom(1,4,.55) + dnbinom(2,4,.55) + dnbinom(3,4,.55)
 ```
     
+As calculated above, the probability that the Braves win the World Series give that *P*<sub>*B*</sub> = 0.55 is approximately 0.61, or a 61% chance of winning the World Series. 
     
 2.  What is the probability that the Braves win the World Series given
     that *P*<sub>*B*</sub> = *x*? This will be a figure with
     *P*<sub>*B*</sub> on the x-axis and *P*(Braves win World Series) on
     the y-axis.
     
+Using the same principles used to solve the previous question, we can create a plot of the winning probability against a changing probability of success in each game. Here, we create a list of the 6  different probabilites we want to test for, and an empty vector of length 6 that will store the winning probability for each case that is being tested in each index. Plotting the probabilities on the x-axis and the winning probability on the y-axis. 
+
 ```{r}
 probability <- c(0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
 pwin <- rep(NA,6)
@@ -74,14 +81,14 @@ pwin[6] <- dnbinom(0,4,1.0) + dnbinom(1,4,1.0) + dnbinom(2,4,1.0) + dnbinom(3,4,
 plot(x = probability, y = pwin, ylim = c(0,1), xlab = "Probability of the Braves winning a head-to-head matchup", ylab = "Pr(Win World Series)", type = "o", pch = 16)
 ```
     
-    
+As can be seen, as the probability of winning a head-to-head matchup increases for the Braves, their chances of winning the World Series increases as well. 
     
 3.  Suppose one could change the World Series to be best-of-9 or some
     other best-of-X series. What is the shortest series length so that
     *P*(Braves win World Series\|*P*<sub>*B*</sub> = .55) ≥ 0.8
     
 ```{r}
-
+#dnbinom(0:i, i, 0.55)
 ```
     
     
@@ -91,7 +98,7 @@ plot(x = probability, y = pwin, ylim = c(0,1), xlab = "Probability of the Braves
     and series length is the y-axis.
     
 ```{r}
-
+#sum(dnbinom(0:i, i, 0.55))  
 ```
     
 5.  Calculate
