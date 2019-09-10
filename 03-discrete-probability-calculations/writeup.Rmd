@@ -42,6 +42,7 @@ Using these three rules of probability, we can break down complex probability pr
 
 1.  Suppose that the Braves and the Yankees are teams competing in the
     World Series.
+    
 2.  Suppose that in any given game, the probability that the Braves win
     is *P*<sub>*B*</sub> and the probability that the Yankees win is
     *P*<sub>*Y*</sub> = 1 − *P*<sub>*B*</sub>.
@@ -52,10 +53,20 @@ Using these three rules of probability, we can break down complex probability pr
 1.  What is the probability that the Braves win the World Series given
     that *P*<sub>*B*</sub> = 0.55?
     
-For the Braves to win the World Series, they have to win a total of 4 out of the 7 games played between the two teams. The probabbility that the Braves win any single game between them and the Yankees is 0.55. The dnbinom() function in R, gives the probability of the number of failues before the K^th^ success. Adding up the probabilities of there being 0, 1, 2 and 3 failures before the successful games up to the 4th success and the title of the World Series, will determine the probability of winning the World Series given that the probability of winning any single game is 0.55.The dnbinom(x, size, prob) function takes in the three parameters, where size is the target number of successes, x is a vector of quantiles and prob is the probability of success in each trial. 
+    For the Braves to win the World Series, they have to win a total of 4 out of the 7 games played between the two teams. The probabbility that the Braves win any single game between them and the Yankees is 0.55. The dnbinom() function in R, gives the probability of the number of failues before the K^th^ success. Adding up the probabilities of there being 0, 1, 2 and 3 failures before the successful games up to the 4th success and the title of the World Series, will determine the probability of winning the World Series given that the probability of winning any single game is 0.55.The dnbinom(x, size, prob) function takes in the three parameters, where size is the target number of successes, x is a vector of quantiles and prob is the probability of success in each trial. 
+    
+    We can also alternatively create a function that takes in the length of the sereis and the probability of winning a single event which returns the probability of winning the world series. Using the pnbinom function does the same thing as summing up all the values that the dnbinom function gives per scenario. Instead, the pnbinom function takes in the games you need to win in order to win the series, the length of the series and the probability. Using this function gives us the same answer as the previous method. 
 
 ```{r}
-dnbinom(0,4,.55) + dnbinom(1,4,.55) + dnbinom(2,4,.55) + dnbinom(3,4,.55)
+
+winp <- function(SL, Pb) {
+    nnw <- (SL+1)/2 #Games have to win or order to win the series
+    pnbinom(nnw-1, nnw, Pb) 
+}
+
+winp(7,.55)
+
+#dnbinom(0,4,.55) + dnbinom(1,4,.55) + dnbinom(2,4,.55) + dnbinom(3,4,.55)
 ```
     
 As calculated above, the probability that the Braves win the World Series give that *P*<sub>*B*</sub> = 0.55 is approximately 0.61, or a 61% chance of winning the World Series. 
@@ -65,20 +76,26 @@ As calculated above, the probability that the Braves win the World Series give t
     *P*<sub>*B*</sub> on the x-axis and *P*(Braves win World Series) on
     the y-axis.
     
-Using the same principles used to solve the previous question, we can create a plot of the winning probability against a changing probability of success in each game. Here, we create a list of the 6  different probabilites we want to test for, and an empty vector of length 6 that will store the winning probability for each case that is being tested in each index. Plotting the probabilities on the x-axis and the winning probability on the y-axis. 
+    Using the same principles used to solve the previous question, we can create a plot of the winning probability against a changing probability of success in each game. Here, we create a list of the 6  different probabilites we want to test for, and an empty vector of length 6 that will store the winning probability for each case that is being tested in each index. Plotting the probabilities on the x-axis and the winning probability on the y-axis. 
 
 ```{r}
+
 probability <- c(0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
 pwin <- rep(NA,6)
 
-pwin[1] <- dnbinom(0,4,.5) + dnbinom(1,4,.5) + dnbinom(2,4,.5) + dnbinom(3,4,.5)
-pwin[2] <- dnbinom(0,4,.6) + dnbinom(1,4,.6) + dnbinom(2,4,.6) + dnbinom(3,4,.6)
-pwin[3] <- dnbinom(0,4,.7) + dnbinom(1,4,.7) + dnbinom(2,4,.7) + dnbinom(3,4,.7)
-pwin[4] <- dnbinom(0,4,.8) + dnbinom(1,4,.8) + dnbinom(2,4,.8) + dnbinom(3,4,.8)
-pwin[5] <- dnbinom(0,4,.9) + dnbinom(1,4,.9) + dnbinom(2,4,.9) + dnbinom(3,4,.9)
-pwin[6] <- dnbinom(0,4,1.0) + dnbinom(1,4,1.0) + dnbinom(2,4,1.0) + dnbinom(3,4,1.0)
+for (i in seq_along(1:6)) {
+    pwin[i] <- winp(7, probability[i])
+}
 
 plot(x = probability, y = pwin, ylim = c(0,1), xlab = "Probability of the Braves winning a head-to-head matchup", ylab = "Pr(Win World Series)", type = "o", pch = 16)
+
+#pwin[1] <- dnbinom(0,4,.5) + dnbinom(1,4,.5) + dnbinom(2,4,.5) + dnbinom(3,4,.5)
+#pwin[2] <- dnbinom(0,4,.6) + dnbinom(1,4,.6) + dnbinom(2,4,.6) + dnbinom(3,4,.6)
+#pwin[3] <- dnbinom(0,4,.7) + dnbinom(1,4,.7) + dnbinom(2,4,.7) + dnbinom(3,4,.7)
+#pwin[4] <- dnbinom(0,4,.8) + dnbinom(1,4,.8) + dnbinom(2,4,.8) + dnbinom(3,4,.8)
+#pwin[5] <- dnbinom(0,4,.9) + dnbinom(1,4,.9) + dnbinom(2,4,.9) + dnbinom(3,4,.9)
+#pwin[6] <- dnbinom(0,4,1.0) + dnbinom(1,4,1.0) + dnbinom(2,4,1.0) + dnbinom(3,4,1.0)
+
 ```
     
 As can be seen, as the probability of winning a head-to-head matchup increases for the Braves, their chances of winning the World Series increases as well. 
@@ -87,26 +104,91 @@ As can be seen, as the probability of winning a head-to-head matchup increases f
     other best-of-X series. What is the shortest series length so that
     *P*(Braves win World Series\|*P*<sub>*B*</sub> = .55) ≥ 0.8
     
+    We can approach this problem using the same mathematical concepts as in the previous questions. In the case of this question, we need to determine the series length at the point where the probability of winning the series increases to 0.8 and above. Using the same function as we created earlier, we can test for up to a 100 game series and determine at which point the function returns a probability greater than 0.8. 
+    
+    To do this, we create a for loop that runs from 0 to 100 and feed in the function 'winp' we created to iterate for each series length (from 0-100) using the probability of 0.55. We break out of the for loop at the point the probability is greater than 0.8 using the built in break() function, otherwise we continue through the for loop until we reach that point using the built in next() function. 
+    
 ```{r}
-#dnbinom(0:i, i, 0.55)
+for (i in 1:100) {
+    if (winp(i, 0.55) >= 0.8){
+        print(i)
+        break()
+    } else {
+        next()
+    }
+}
 ```
     
+As can be seen from this for loop, the point at which the winp function returns a value greater than 0.8 is during a 71 series game, ie. there would need to be a 71 game tournament for the probability of the Braves winning the World Series to exceed 0.8.
     
 4.  What is the shortest series length so that
     *P*(Braves win World Series\|*P*<sub>*B*</sub> = *x*) ≥ 0.8? This
-    will be a figure (see below) with *P*<sub>*B*</sub> on the x-axis
+    will be a figure with *P*<sub>*B*</sub> on the x-axis
     and series length is the y-axis.
     
+    We can again use the same functions from before to determine the shortest series length we would need in order for the Probability of the Braves winning the series given any probability of winning a single game to be greater than 0.8. 
+    
 ```{r}
-#sum(dnbinom(0:i, i, 0.55))  
+pshort <- rep(NA, 6)
+
+for (j in seq_along(1:6)) {
+    for (i in 1:100) {
+        if (winp(i, probability[j]) >= 0.8) {
+            pshort[j] <- i
+            break()
+        } else {
+            next()
+        }
+    }
+}
+
+plot(x = probability, y = pshort, xlab = "Probability of the Braves winning a head-to-head matchup", ylab = "Series Length", type = "o", pch = 16)
+
 ```
     
 5.  Calculate
     *P*(*P*<sub>*B*</sub> = 0.55\|Braves win World Series in 7 games)
     under the assumption that either *P*<sub>*B*</sub> = 0.55 or
     *P*<sub>*B*</sub> = 0.45. Explain your solution.
+    
+    This problem calls for the utilization of one of the rules of probability discussed in the first section; the Bayes' Rule. It is given to us that the probability that the Braves win any single game is either 0.55 or 0.45. We also know that the Braves win in 7 games. We need to calculate the probability  *P*(*P*<sub>*B*</sub> = 0.55\|Braves win World Series in 7 games). 
+    
+    There is one assumption that we need to make in solving this, and that is what the probability is of the Braves winning any single game. We know it is either 0.55 or 0.45. We assume here that the probability of it being either is 0.5. 
+    
+    Bayes' Theorem: 
 
+<center>
+
+$p(A|B) =$$\frac{p((B|A)*p(A))}{p(B)}$
+
+</center>
+
+In the case of this question, A is p(B) = 0.55 and B is that the Braves win the World Series in 7 games. The Bayes' Theorem can be simplified as following to make it easier for us to solve this problem:
+    
+$p(A|B) =$$\frac{p((B|A)*p(A))}{p(B)}$  
+
+Using the law of total probability we get:
+    
+    
+$p(A|B) =$$\frac{p((B|A)*p(A))}{\sum_{i} p(B and a_i)}$  
+
+Which further can be simplified as:
+    
+$p(A|B) =$$\frac{p((B|A)*p(A))}{\sum_{i} p(a_i)p(B|a_i)}$  
+
+Using this formula, we can now replace the elements with the ones from our problem:
+    
+*P*(*P*<sub>*B*</sub> = 0.55\|Braves win World Series in 7 games) = $\frac{p((BwinWSin7games|P_B=0.55)*p(P_B=0.55))}{p((BwinWSin7games|P_B=0.55)*p(P_B=0.55)) + p((BwinWSin7games|P_B=0.45)*p(P_B=0.45))}$  
+
+Now, in this setup, we know that *P*(*P*<sub>*B*</sub> = 0.55 or 0.45) is 0.5 from our assumption. We know *P*(Braves win the WS|*P*<sub>*B*</sub> = 0.55) from part 1 and we can calculate *P*(Braves win the WS|*P*<sub>*B*</sub> = 0.45) using the same setup as question 1 with a different probability. 
 ```{r}
+p45 <- winp(7,0.45)
+p55 <- winp(7,0.55)
+peither <- 0.5
+#Using above formula
+
+(peither*p55)/((peither*p55) + (peither*p45))
 
 ```
 
+This gives us an answer of 0.608, close to what the answer was if the probability of winning was only 0.55 for each game. 
