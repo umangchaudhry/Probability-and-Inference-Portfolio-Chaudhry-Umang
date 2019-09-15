@@ -583,6 +583,10 @@ print(paste0(&quot;Probability of winning with the home field advantage = &quot;
 <ol start="3" style="list-style-type: decimal">
 <li>What is the absolute and relative error for your simulation in the previous question?</li>
 </ol>
+<p>To calculate the absolute and relative error, we can use the formulas for error that we saw earlier.</p>
+<p>absolute error = |p̂−p|</p>
+<p>relative error = |p̂−p|/p.</p>
+<p>In the case of this scenario, let p̂ denote the probability estimated from simulation, and p as the probability estimated from the analytic solution.</p>
 <pre class="r"><code>abs_errorhfi &lt;- abs(WinWithAd - AWinWithAd$V1[[1]])
 abs_errorhfi</code></pre>
 <pre><code>## [1] 0.0002339152</code></pre>
@@ -597,7 +601,7 @@ rel_error</code></pre>
 <pre><code>## [1] 0.000771288</code></pre>
 <p>The Absolute error for winning with the home field advantage was 2.3391524× 10<sup>-4</sup>. The relative error for winning with the home field advantage was 3.6864558× 10<sup>-4</sup>.</p>
 <p>The Absolute error for winning with the home field advantage was 4.6602839× 10<sup>-4</sup>. The relative error for winning with the home field advantage was 7.71288× 10<sup>-4</sup>.</p>
-<hr />
+<p>As can be seen, the error between the two methods is extremely small, and both methods provide relatively similar results. _________</p>
 <ol start="4" style="list-style-type: decimal">
 <li><p><strong>Bonus.</strong> Does the difference in probabilites (with vs without home field advantage) depend on <em>P</em><sub><em>B</em></sub>?</p></li>
 <li><p><strong>Bonus.</strong> Does the difference in probabilites (with vs without home field advantage) depend on the advantage factor? (The advantage factor in <em>P</em><sub><em>B</em></sub><sup><em>H</em></sup> and <em>P</em><sub><em>B</em></sub><sup><em>A</em></sup> is the 1.1 multiplier that results in a 10% increase for the home team.)</p></li>
