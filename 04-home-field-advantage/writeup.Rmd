@@ -133,7 +133,7 @@ for(i in 1:nrow(apo)){
 AWinWithAd <- apo[, sum(p), overall_outcome]
 print(paste0("Probability of winning with the home field advantage = ", AWinWithAd$V1[[1]]))
 ```
-The probability of the Braves winning the world series given the home field advantage (More games were played at ATL than NYC) was `r AWinWithAd$V1[[1]]`, whlie the probability of them winning without the home field advantage was `r AWinWithoutAd$V1[[1]]`, given that the probability of winning any single game without the home field advantage is 0.55 and with the advantage is 0.55 plus a 10% advantage. 
+The probability of the Braves winning the world series given the home field advantage (More games were played at ATL than NYC) was `r AWinWithAd$V1[[1]]`, whlie the probability of them winning without the home field advantage was `r AWinWithoutAd$V1[[1]]`, given that the probability of winning any single game without the home field advantage is 0.55 and with the advantage is 0.55 plus a 10% advantage. The difference between the probabilities is `r abs(AWinWithAd$V1[[1]] - AWinWithoutAd$V1[[1]])`.
 
 
 2.  Calculate the same probabilities as the previous question by
