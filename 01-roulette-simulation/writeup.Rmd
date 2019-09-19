@@ -191,7 +191,7 @@ The above code runs a simulation of the function running a series of plays until
 
 As can be seen from the results of the run of the simulation, the estimated probability of walking out with extra cash is always somewhere around 50%, and the estimated earnings are all almost negative, as the stopping conditions were met before a winning wager was made. 
 
-A plot of the gamblers winnings or losses over time over a series of wagers at the roulette wheel can be found below. 
+A graph showing how the earnings of a player evolve as the number of plays increases can be found below. As can be seen, there is a lot of variation and uncertainty of coming out of a game of roulette using this strategy with a profit as they change more drastically as the number of plays increases. 
 
 ``` {r earnings_over_time, include=TRUE}
 #WagerNo/Earnings
