@@ -70,7 +70,7 @@ Questions to answer:
     with and without home field advantage when *P*<sub>*B*</sub> = 0.55.
     What is the difference in probabilities?
     
-    In this method of trying to compute the probability that the Braves win the wrold series given a certain sequence of game locations, we use and modify the below code chunk provided to us. First, a data frame containing all the possible world series outcomes is read in. A home field indicator is established, which indicates what the series of playing home and away games would be. Variables for the probability of winning a single game, the advantage multiplier (10% advantage), the probability of winning a home game and an away game are created. Then we calculate the probability of each possible outcome in a series of 7 games, given a home field indicator and the subsequent advantage multiplier for that game location for the Braves. Another column containing the probability of winning each possible outcome is added to the initial data frame. The sum of the probability of winning or losing each game provides the probability of winning or losing the world series.
+    In this method of trying to compute the probability that the Braves win the wrold series given a certain sequence of game locations, we use and modify the below code chunk provided to us. First, a data frame containing all the possible world series outcomes is read in. A home field indicator is established, which indicates what the series of playing home and away games would be. Variables for the probability of winning a single game, the advantage multiplier (10% advantage) (equal to 1 for no advantage), the probability of winning a home game and an away game are created. Then we calculate the probability of each possible outcome in a series of 7 games, given the home field indicator and the advantage multiplier. Another column containing the probability of winning each possible outcome is added to the initial data frame. The sum of the probability of winning or losing each game provides the probability of winning or losing the world series.
 
   
 ```{r}
@@ -111,7 +111,12 @@ for(i in 1:nrow(apo)){
 AWinWithoutAd <- apo[, sum(p), overall_outcome]
 print(paste0("Probability of winning without the home field advantage = ", AWinWithoutAd$V1[[1]]))
 
-# Calculate the probability of each possible outcome for hfi1
+# Calculate the probability of each possible outcome for hfi2 without home field advantage
+# P_B
+pb <- 0.55
+advantage_multiplier <- 1 # Set = 1 for no advantage
+pbh <- 0.55*advantage_multiplier
+pba <- 1 - (1 - 0.55)*advantage_multiplier
 apo[, p := NA_real_] # Initialize new column in apo to store prob
 for(i in 1:nrow(apo)){
   prob_game <- rep(1, 7)
