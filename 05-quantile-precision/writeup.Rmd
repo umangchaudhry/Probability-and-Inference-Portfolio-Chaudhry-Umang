@@ -108,15 +108,29 @@ plot(quantiles, q1, type = "o", pch = 16)
 Now, to understand the relationship between density and the corresponding quantile, we just need to transform our x-axis values. We first use the qnorm function and dnorm function on the list of quantiles being tested for to generate a list of densities. 
 
 ```{r}
-density <- function(quant) {
-  densq <- qnorm(quant)
-  density.quantiles <- dnorm(densq)
+density <- function(quant, type) {
+  densq <- rep(NA, length(quant))
+  density.quantiles <- rep(NA, length(quant))
+  if (type == "normal") {
+    for (i in seq_along(quant)) {
+      densq[i] <- qnorm(quant[i])
+      density.quantiles[i] <- dnorm(densq[i])
+    }
+    return(density.quantiles)
+  }
+  else if (type == "exponential") {
+    for (i in seq_along(quant)) {
+      densq[i] <- qexp(quant[i])
+      density.quantiles[i] <- dexp(densq[i])
+    }
+    return(density.quantiles)
+  }
 }
 
-densities <- density(quantiles)
-densities
+densitiesn <- density(quantiles, "normal")
+densitiesn
 
-plot(densities, q1, type = "o", pch = 16)
+plot(densitiesn, q1, type = "p", pch = 16)
 ```
 
 
@@ -201,8 +215,11 @@ As we created a function that is able to take in the type of disitribution being
 
 q2 <- quantilelength(200, 5000, quantiles, "exponential")
 
+densitiese <- density(quantiles, "exponential")
+
 plot(quantiles, q2, type = "o", pch = 16)
-plot(densities, q2, type = "o", pch = 16)
+plot(densitiese, q2, type = "o", pch = 16)
+
 ```
 
 # Distribution 3 - Mixture Distribution using Normal Distributions
@@ -224,10 +241,28 @@ df3 <- function(x){
   .5*dnorm(x) + .3*dnorm(x,4) + .2*dnorm(x,-4,2)
 }
 
+den1 <- function(quant) {
+  df <- rep(NA, length(quant))
+  root <- rep(NA, length(quant))
+  for (i in seq_along(quant)) {
+     df <- function (x) pf3(x) - quant[i]
+    root[i] <- uniroot(df, c(-1000,1000))[[1]]
+  }
+  return(root)
+}
+dens <- den1(quantiles)
+densitiesMN <- rep(NA, length(dens))
+for (i in seq_along(dens)) {
+  densitiesMN[i] <- df3(dens[i])
+}
+densitiesMN
+
+rf3(100000) %>% range()
+
 q3 <- quantilelength(200, 5000, quantiles, "mixture_normal")
 
 plot(quantiles, q3, type = "o", pch = 16)
-plot(densities, q3, type = "o", pch = 16)
+plot(densitiesMN, q3, type = "p", pch = 16)
 ```
 
 # Distribution 4 - Mixture Distribution using Beta Distributions
@@ -241,9 +276,33 @@ rf4 <- function(N){
   (G==0)*rbeta(N,5,1) + (G==1)*rbeta(N,1,5)
 }
 
+pf4 <- function(x){
+  .5*pbeta(x,5,1) + .5*pbeta(x,1,5)
+}
+
+df4 <- function(x){
+  .5*dbeta(x,5,1) + .5*dbeta(x,1,5)
+}
+
+den2 <- function(quant) {
+  df <- rep(NA, length(quant))
+  root <- rep(NA, length(quant))
+  for (i in seq_along(quant)) {
+     df <- function (x) pf4(x) - quant[i]
+    root[i] <- uniroot(df, c(-1000,1000))[[1]]
+  }
+  return(root)
+}
+dens2 <- den2(quantiles)
+densitiesBD <- rep(NA, length(dens2))
+for (i in seq_along(dens2)) {
+  densitiesBD[i] <- df4(dens2[i])
+}
+densitiesBD
+
 q4 <- quantilelength(200, 5000, quantiles, "mixture_beta")
 plot(quantiles, q4, type = "o", pch = 16)
-plot(densities, q4, type = "o", pch = 16)
+plot(densitiesBD, q4, type = "p", pch = 16)
 ```
 
 # Changing Sample Size
@@ -274,13 +333,13 @@ ggplot(multiplot) +
   geom_line(aes(y = X1600, x = quantiles))
 
 ggplot(multiplot) + 
-  geom_line(aes(y = X200, x = densities)) +
-  geom_point(aes(y = X200, x = densities)) +
-  geom_line(aes(y = X400, x = densities)) +
-    geom_point(aes(y = X400, x = densities)) +
-  geom_line(aes(y = X800, x = densities)) +
-    geom_point(aes(y = X800, x = densities)) +
-  geom_line(aes(y = X1600, x = densities)) +
-  geom_point(aes(y = X1600, x = densities)) 
+  geom_line(aes(y = X200, x = densitiesn)) +
+  geom_point(aes(y = X200, x = densitiesn)) +
+  geom_line(aes(y = X400, x = densitiesn)) +
+    geom_point(aes(y = X400, x = densitiesn)) +
+  geom_line(aes(y = X800, x = densitiesn)) +
+    geom_point(aes(y = X800, x = densitiesn)) +
+  geom_line(aes(y = X1600, x = densitiesn)) +
+  geom_point(aes(y = X1600, x = densitiesn)) 
 ```
 
