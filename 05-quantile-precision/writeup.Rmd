@@ -83,13 +83,13 @@ single_quantile <- function(n, draws, quant, type) {
   return(as.numeric(difference))
 }
 
-single_quantile(200, 5000, 0.05, "normal")
+single_quantile(200, 5000, 0.95, "normal")
 ```
 
 Now that we have a function that can calculate the length of the middle 95% of the sampling distribution for a particular quantile, we can create a function that will be able to generate a length for multiple quantiles. Below, I create a function called quantilelength that takes in the same variables as single_quantile, but iterates the single_quantile function in a for loop for the length of a vector containing multiple quantiles being tested for. The function returns a vector called qlength that contains the lengths of the middle 95% of the distribution for multiple quantiles. 
 
 ``` {r quantile_length_function}
-quantiles <- c(0.05, 0.20, 0.35, 0.5, 0.65, 0.80, 0.95)
+quantiles <- c(0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95)
 
 quantilelength <- function (n, draws, quant, type) {
   qlength <- rep(NA, length(quant))
@@ -101,9 +101,24 @@ quantilelength <- function (n, draws, quant, type) {
 
 q1 <- quantilelength(200, 5000, quantiles, "normal")
 
-plot(q1)
+plot(quantiles, q1, type = "o", pch = 16)
 
 ```
+
+Now, to understand the relationship between density and the corresponding quantile, we just need to transform our x-axis values. We first use the qnorm function and dnorm function on the list of quantiles being tested for to generate a list of densities. 
+
+```{r}
+density <- function(quant) {
+  densq <- qnorm(quant)
+  density.quantiles <- dnorm(densq)
+}
+
+densities <- density(quantiles)
+densities
+
+plot(densities, q1, type = "o", pch = 16)
+```
+
 
 ```{r notes, include=FALSE}
 #Notes
@@ -186,7 +201,8 @@ As we created a function that is able to take in the type of disitribution being
 
 q2 <- quantilelength(200, 5000, quantiles, "exponential")
 
-plot(q2)
+plot(quantiles, q2, type = "o", pch = 16)
+plot(densities, q2, type = "o", pch = 16)
 ```
 
 # Distribution 3 - Mixture Distribution using Normal Distributions
@@ -210,7 +226,8 @@ df3 <- function(x){
 
 q3 <- quantilelength(200, 5000, quantiles, "mixture_normal")
 
-plot(q3)
+plot(quantiles, q3, type = "o", pch = 16)
+plot(densities, q3, type = "o", pch = 16)
 ```
 
 # Distribution 4 - Mixture Distribution using Beta Distributions
@@ -225,7 +242,8 @@ rf4 <- function(N){
 }
 
 q4 <- quantilelength(200, 5000, quantiles, "mixture_beta")
-plot(q4)
+plot(quantiles, q4, type = "o", pch = 16)
+plot(densities, q4, type = "o", pch = 16)
 ```
 
 # Changing Sample Size
@@ -254,5 +272,15 @@ ggplot(multiplot) +
   geom_line(aes(y = X400, x = quantiles)) +
   geom_line(aes(y = X800, x = quantiles)) +
   geom_line(aes(y = X1600, x = quantiles))
+
+ggplot(multiplot) + 
+  geom_line(aes(y = X200, x = densities)) +
+  geom_point(aes(y = X200, x = densities)) +
+  geom_line(aes(y = X400, x = densities)) +
+    geom_point(aes(y = X400, x = densities)) +
+  geom_line(aes(y = X800, x = densities)) +
+    geom_point(aes(y = X800, x = densities)) +
+  geom_line(aes(y = X1600, x = densities)) +
+  geom_point(aes(y = X1600, x = densities)) 
 ```
 
