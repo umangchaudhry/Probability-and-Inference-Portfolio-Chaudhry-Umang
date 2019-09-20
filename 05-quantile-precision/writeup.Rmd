@@ -1,7 +1,16 @@
 ---
 title: "Blog Post - Quantile Precision"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+```
+
 
 # Which quantiles of a continuous distribution can one estimate with more precision?
 
@@ -39,8 +48,66 @@ Using the above figures, we will be able to answer the following questions:
 
 # Distribution 1 - Standard Normal Distribution
 
-```{r}
-library(ggplot2)
+In order to make the following computations for each of the types of distributions easier, we will first create a function that can take in certain parameters and give an output of the length of the middle 95% of the sampling distribution for a set of quantiles. 
+
+We first need to be able to generate the length of the middle 95% of the sampling distribution for a single quantile. The quantiles that we will be sampling for in this post are 0.05, 0.20, 0.35, 0.5, 0.65, 0.80, and 0.95. 
+
+In the code below, I create a function called single_quartile, that takes in 4 parameters; 'n', which is the sample size, the number of draws in the sampling distribution, quant, the quantile being tested and the type of distribution we are testing for. In the function, we first create a blank vector that is the length of the number of draws. We then iterate through a for loop for each draw. In this for loop, we first check which type of distribution we are testing for, and then follow the steps used to calculate the result for each of the distributions. In the case of the Standard Normal Distribution, we are using the rnorm function to generate a random normal distribution. Similarly, for the Exponential distribution, we use the rexp function to generate the distribution. The mixed normal and mixed beta functions are more complicated and are further discussed in the corresponding sections. 
+
+Once the type being used has been determined, we run the distribution generation function for the given type, in this case, rnorm, with the given sample size "n". We store this distribution in a data frame called nd (normal distribution). We then use the R quantile function to calculate that quantile of the distribution being tested for, storing this in dataframe qd. We then use the quantile functions to calculate the length of the middle 95% of the sampling distribution stored in qd by calculating the difference between 2.5% and 97.5% percentiles of the sampling distribution using the quantile function. The single_quantile function then returns the length of the middle 95% of the distribution as a numeric. 
+
+```{r distribution_function}
+
+single_quantile <- function(n, draws, quant, type) {
+  qd <- rep(NA, draws)
+  for (i in 1:draws) {
+    if (type == "normal") {
+      nd <- rnorm(n)
+      qd[i] <- quantile(nd, quant)
+    } else if (type == "exponential") {
+      nd <- rexp(n)
+      qd[i] <- quantile(nd, quant)
+    } else if (type == "mixture_normal") {
+      nd <- rf3(n)
+      qd[i] <- quantile(nd, quant)
+    } else if (type == "mixture_beta") {
+      nd <- rf4(n)
+      qd[i] <- quantile(nd, quant)
+    } else {
+      return(NULL)
+    }
+  }
+  length25 <- quantile(qd, 0.025)
+  length975 <- quantile(qd, 0.975)
+  difference <- abs(length975 - length25)
+  return(as.numeric(difference))
+}
+
+single_quantile(200, 5000, 0.05, "normal")
+```
+
+Now that we have a function that can calculate the length of the middle 95% of the sampling distribution for a particular quantile, we can create a function that will be able to generate a length for multiple quantiles. Below, I create a function called quantilelength that takes in the same variables as single_quantile, but iterates the single_quantile function in a for loop for the length of a vector containing multiple quantiles being tested for. The function returns a vector called qlength that contains the lengths of the middle 95% of the distribution for multiple quantiles. 
+
+``` {r quartile_length_function}
+quantiles <- c(0.05, 0.20, 0.35, 0.5, 0.65, 0.80, 0.95)
+
+quantilelength <- function (n, draws, quant, type) {
+  qlength <- rep(NA, length(quant))
+  for (i in seq_along(quant)) {
+    qlength[i] <- single_quantile(n, draws, quant[i], type)
+  }
+  return(qlength)
+} 
+
+q1 <- quantilelength(200, 5000, quantiles, "normal")
+
+plot(q1)
+
+```
+
+```{r notes, include=FALSE}
+#Notes
+
 #distribution <- function(n, draws, quartile) {
 #  qd <- rep(NA, draws)
 #  for (i in 1:draws) {
@@ -52,59 +119,6 @@ library(ggplot2)
 #  difference <- abs(length975 - length25)
 #  return(as.numeric(difference))
 #}
-
-n <- c(200, 400, 800, 1600)
-mylist.names <- c("n", "quartile")
-
-multilength <- sapply(mylist.names, function(x) NULL)
-for (i in seq_along(n)) {
-  multilength[[i]] <- 
-}
-
-quartiles <- c(0.05, 0.20, 0.35, 0.5, 0.65, 0.80, 0.95)
-
-quartilelength <- function (n, draws, quartile, type) {
-  qlength <- rep(NA, length(quartile))
-  for (i in seq_along(quartiles)) {
-    qlength[i] <- distribution(n, draws, quartile[i], type)
-  }
-  return(qlength)
-} 
-
-quartilelength(200, 5000, quartiles, "normal")
-
-#nd <- rep(NA, length(quartiles))
-#for (i in seq_along(quartiles)) {
-#  nd[i] <- distribution(200, 5000, quartiles[i], "normal")
-#}
-#nd
-
-distribution <- function(n, draws, quartile, type) {
-  qd <- rep(NA, draws)
-  for (i in 1:draws) {
-    if (type == "normal") {
-      nd <- rnorm(n)
-      qd[i] <- quantile(nd, quartile)
-    } else if (type == "exponential") {
-      nd <- rexp(n)
-      qd[i] <- quantile(nd, quartile)
-    } else if (type == "mixture_normal") {
-      nd <- rf3(n)
-      qd[i] <- quantile(nd, quartile)
-    } else if (type == "mixture_beta") {
-      nd <- rf4(n)
-      qd[i] <- quantile(nd, quartile)
-    } else {
-      return(NULL)
-    }
-  }
-  length25 <- quantile(qd, 0.025)
-  length975 <- quantile(qd, 0.975)
-  difference <- abs(length975 - length25)
-  return(as.numeric(difference))
-}
-
-#distribution(200, 5000, 0.05, "normal")
 
 #qd <- rep(NA, 5)
 #  for (i in 1:5) {
@@ -150,17 +164,37 @@ distribution <- function(n, draws, quartile, type) {
 #}
 
 
+#nd <- rep(NA, length(quartiles))
+#for (i in seq_along(quartiles)) {
+#  nd[i] <- distribution(200, 5000, quartiles[i], "normal")
+#}
+#nd
+
+#multilength <- sapply(mylist.names, function(x) NULL)
+#for (i in seq_along(n)) {
+#  multilength[[i]] <- quartilelength(n[i],5000,quartiles,"normal")
+#}
+
+#mylist.names <- c("200", "400","800","1600")
 ```
 
 # Distribution 2 - Exponential Distribution
 
+As we created a function that is able to take in the type of disitribution being tested for, we use the same quantilelength function, indicating that the type is "exponential". 
+
 ```{r}
 
+q2 <- quantilelength(200, 5000, quartiles, "exponential")
+
+plot(q2)
 ```
 
 # Distribution 3 - Mixture Distribution using Normal Distributions
 
+The mixture distribution using nomral distributions is also built into the quantilelength function as seen above. Here, let's see what function is being used to generate the mixture distribution. The function rf3 creates a mixture distribution by sampling and combining 3 different standard normal distributions. 
+
 ```{r}
+
 rf3 <- function(N){
   G <- sample(0:2, N, replace = TRUE, prob = c(5,3,2))
   (G==0)*rnorm(N) + (G==1)*rnorm(N,4) + (G==2)*rnorm(N,-4,2)
@@ -173,20 +207,52 @@ pf3 <- function(x){
 df3 <- function(x){
   .5*dnorm(x) + .3*dnorm(x,4) + .2*dnorm(x,-4,2)
 }
+
+q3 <- quantilelength(200, 5000, quartiles, "mixture_normal")
+
+plot(q3)
 ```
 
 # Distribution 4 - Mixture Distribution using Beta Distributions
 
+The mixture distribution using beta distributions is also built into the quantilelength function as seen above. Here, let's see what function is being used to generate the mixture distribution. The function rf4 creates a mixture distribution by sampling and combining 2 different beta distributions distributions. 
+
 ```{r}
+
 rf4 <- function(N){
   G <- sample(0:1, N, replace = TRUE)
   (G==0)*rbeta(N,5,1) + (G==1)*rbeta(N,1,5)
 }
+
+q4 <- quantilelength(200, 5000, quartiles, "mixture_beta")
+plot(q4)
 ```
 
 # Changing Sample Size
 
+To understand how changing the sample size affects the uncertainties in the quantiles, we can create a function that runs the quantilelength function for different samples sizes. The multilength function below takes in the same parameters as the quantilelength function, but runs the quantilelength function over a for loop iterating through a vector multin containing different sample sizes being tested for. The function returns a list of the lengths of the middle 95% of each of the quantiles and sample sizes being tested for.
+
 ```{r}
 
+multin <- c(200, 400, 800, 1600)
+
+multilength <- function(n, draws, quart, type) {
+  mylist.names <- c("200", "400", "800", "1600")
+  nlengths <- sapply(mylist.names, function(x)
+    NULL)
+  for (i in seq_along(n)) {
+    nlengths[[i]] <- quantilelength(n[i], draws, quart, type)
+  }
+  return(as.data.frame(nlengths))
+}
+
+multiplot <- multilength(multin, 5000, quartiles, "normal")
+multiplot
+
+ggplot(multiplot) + 
+  geom_line(aes(y = X200, x = quantiles)) +
+  geom_line(aes(y = X400, x = quantiles)) +
+  geom_line(aes(y = X800, x = quantiles)) +
+  geom_line(aes(y = X1600, x = quantiles))
 ```
 
