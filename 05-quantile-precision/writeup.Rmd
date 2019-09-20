@@ -184,7 +184,7 @@ As we created a function that is able to take in the type of disitribution being
 
 ```{r}
 
-q2 <- quantilelength(200, 5000, quartiles, "exponential")
+q2 <- quantilelength(200, 5000, quantiles, "exponential")
 
 plot(q2)
 ```
@@ -208,7 +208,7 @@ df3 <- function(x){
   .5*dnorm(x) + .3*dnorm(x,4) + .2*dnorm(x,-4,2)
 }
 
-q3 <- quantilelength(200, 5000, quartiles, "mixture_normal")
+q3 <- quantilelength(200, 5000, quantiles, "mixture_normal")
 
 plot(q3)
 ```
@@ -224,7 +224,7 @@ rf4 <- function(N){
   (G==0)*rbeta(N,5,1) + (G==1)*rbeta(N,1,5)
 }
 
-q4 <- quantilelength(200, 5000, quartiles, "mixture_beta")
+q4 <- quantilelength(200, 5000, quantiles, "mixture_beta")
 plot(q4)
 ```
 
@@ -246,7 +246,7 @@ multilength <- function(n, draws, quart, type) {
   return(as.data.frame(nlengths))
 }
 
-multiplot <- multilength(multin, 5000, quartiles, "normal")
+multiplot <- multilength(multin, 5000, quantiles, "normal")
 multiplot
 
 ggplot(multiplot) + 
