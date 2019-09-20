@@ -101,13 +101,13 @@ quantilelength <- function (n, draws, quant, type) {
 
 q1 <- quantilelength(200, 5000, quantiles, "normal")
 
-plot(quantiles, q1, type = "o", pch = 16)
+plot(quantiles, q1, type = "o", pch = 16, ylab = "Length", xlab = expression("p"^th*"quantile")) 
 
 ```
 
-Now, to understand the relationship between density and the corresponding quantile, we just need to transform our x-axis values. We first use the qnorm function and dnorm function on the list of quantiles being tested for to generate a list of densities. 
+Now, to understand the relationship between density and the corresponding quantile, we just need to transform our x-axis values. We first use the qnorm function and dnorm function on the list of quantiles being tested for to generate a list of densities. I created a function called density that takes in a vector of quantiles and the type (either exponential or normal) of distribution. I use toe qnorm and dnorm function to calculate the density for the normal distribution and the qexp and dexp functions for the exponential distributions. 
 
-```{r}
+```{r normal_density}
 density <- function(quant, type) {
   densq <- rep(NA, length(quant))
   density.quantiles <- rep(NA, length(quant))
@@ -130,7 +130,7 @@ density <- function(quant, type) {
 densitiesn <- density(quantiles, "normal")
 densitiesn
 
-plot(densitiesn, q1, type = "p", pch = 16)
+plot(densitiesn, q1, type = "p", pch = 16, xlab = "Density", ylab = "Length")
 ```
 
 
@@ -211,22 +211,22 @@ plot(densitiesn, q1, type = "p", pch = 16)
 
 As we created a function that is able to take in the type of disitribution being tested for, we use the same quantilelength function, indicating that the type is "exponential". 
 
-```{r}
+```{r exponential}
 
 q2 <- quantilelength(200, 5000, quantiles, "exponential")
 
 densitiese <- density(quantiles, "exponential")
 
-plot(quantiles, q2, type = "o", pch = 16)
-plot(densitiese, q2, type = "o", pch = 16)
+plot(quantiles, q2, type = "o", pch = 16, ylab = "Length", xlab = expression("p"^th*"quantile"))
+plot(densitiese, q2, type = "o", pch = 16, xlab = "Density", ylab = "Length")
 
 ```
 
 # Distribution 3 - Mixture Distribution using Normal Distributions
 
-The mixture distribution using nomral distributions is also built into the quantilelength function as seen above. Here, let's see what function is being used to generate the mixture distribution. The function rf3 creates a mixture distribution by sampling and combining 3 different standard normal distributions. 
+The mixture distribution using nomral distributions is also built into the quantilelength function as seen above. Here, let's see what function is being used to generate the mixture distribution. The function rf3 creates a mixture distribution by sampling and combining 3 different standard normal distributions. The process of finding the density is different for mixture distributions as you cannot just add the inverses for each of the parts of the distribution. I create a function called den1 that calculates the root for the corresponding quantiles using the pf3 function and the uniroot function. These roots are then transformed using the df3 function to create a vector densitiesMN containing the densities for the associated quantiles. 
 
-```{r}
+```{r mixture_normal}
 
 rf3 <- function(N){
   G <- sample(0:2, N, replace = TRUE, prob = c(5,3,2))
@@ -250,6 +250,7 @@ den1 <- function(quant) {
   }
   return(root)
 }
+
 dens <- den1(quantiles)
 densitiesMN <- rep(NA, length(dens))
 for (i in seq_along(dens)) {
@@ -261,15 +262,15 @@ rf3(100000) %>% range()
 
 q3 <- quantilelength(200, 5000, quantiles, "mixture_normal")
 
-plot(quantiles, q3, type = "o", pch = 16)
-plot(densitiesMN, q3, type = "p", pch = 16)
+plot(quantiles, q3, type = "o", pch = 16, ylab = "Length", xlab = expression("p"^th*"quantile"))
+plot(densitiesMN, q3, type = "p", pch = 16, xlab = "Density", ylab = "Length")
 ```
 
-# Distribution 4 - Mixture Distribution using Beta Distributions
+## Distribution 4 - Mixture Distribution using Beta Distributions
 
-The mixture distribution using beta distributions is also built into the quantilelength function as seen above. Here, let's see what function is being used to generate the mixture distribution. The function rf4 creates a mixture distribution by sampling and combining 2 different beta distributions distributions. 
+The mixture distribution using beta distributions is also built into the quantilelength function as seen above. Here, let's see what function is being used to generate the mixture distribution. The function rf4 creates a mixture distribution by sampling and combining 2 different beta distributions distributions. The density function den2 follows the same principles of the function den1 to calculate the root of the quantiles. Those roots are then transformed using the df4 function to calculate the corresponding densities. 
 
-```{r}
+```{r mixture_beta}
 
 rf4 <- function(N){
   G <- sample(0:1, N, replace = TRUE)
@@ -301,15 +302,15 @@ for (i in seq_along(dens2)) {
 densitiesBD
 
 q4 <- quantilelength(200, 5000, quantiles, "mixture_beta")
-plot(quantiles, q4, type = "o", pch = 16)
-plot(densitiesBD, q4, type = "p", pch = 16)
+plot(quantiles, q4, type = "o", pch = 16, ylab = "Length", xlab = expression("p"^th*"quantile"))
+plot(densitiesBD, q4, type = "p", pch = 16, xlab = "Density", ylab = "Length")
 ```
 
-# Changing Sample Size
+## Changing Sample Size
 
-To understand how changing the sample size affects the uncertainties in the quantiles, we can create a function that runs the quantilelength function for different samples sizes. The multilength function below takes in the same parameters as the quantilelength function, but runs the quantilelength function over a for loop iterating through a vector multin containing different sample sizes being tested for. The function returns a list of the lengths of the middle 95% of each of the quantiles and sample sizes being tested for.
+To understand how changing the sample size affects the uncertainties in the quantiles, we can create a function that runs the quantilelength function for different samples sizes. The multilength function below takes in the same parameters as the quantilelength function, but runs the quantilelength function over a for loop iterating through a vector multin containing different sample sizes being tested for. The function returns a list of the lengths of the middle 95% of each of the quantiles and sample sizes being tested for. We can then plot these lengths on a single graph to determine how changing the sample size affects the length of the middle 95% of the sample distribution. 
 
-```{r}
+```{r sample_size}
 
 multin <- c(200, 400, 800, 1600)
 
@@ -327,19 +328,24 @@ multiplot <- multilength(multin, 5000, quantiles, "normal")
 multiplot
 
 ggplot(multiplot) + 
-  geom_line(aes(y = X200, x = quantiles)) +
-  geom_line(aes(y = X400, x = quantiles)) +
-  geom_line(aes(y = X800, x = quantiles)) +
-  geom_line(aes(y = X1600, x = quantiles))
+  geom_line(aes(y = X200, x = quantiles, colour = "n = 200")) + 
+  geom_line(aes(y = X400, x = quantiles, colour = "n = 400")) +
+  geom_line(aes(y = X800, x = quantiles, colour = "n = 800")) +
+  geom_line(aes(y = X1600, x = quantiles, colour = "n = 1600")) + 
+  scale_color_discrete(name = "Sample Size") +
+  labs(x = "Quantiles", y = "Length")
+
 
 ggplot(multiplot) + 
-  geom_line(aes(y = X200, x = densitiesn)) +
-  geom_point(aes(y = X200, x = densitiesn)) +
-  geom_line(aes(y = X400, x = densitiesn)) +
-    geom_point(aes(y = X400, x = densitiesn)) +
-  geom_line(aes(y = X800, x = densitiesn)) +
-    geom_point(aes(y = X800, x = densitiesn)) +
-  geom_line(aes(y = X1600, x = densitiesn)) +
-  geom_point(aes(y = X1600, x = densitiesn)) 
+  geom_line(aes(y = X200, x = densitiesn, colour = "n = 200")) +
+  geom_point(aes(y = X200, x = densitiesn, colour = "n = 200")) +
+  geom_line(aes(y = X400, x = densitiesn, colour = "n = 400")) +
+    geom_point(aes(y = X400, x = densitiesn, colour = "n = 400")) +
+  geom_line(aes(y = X800, x = densitiesn, colour = "n = 800")) +
+    geom_point(aes(y = X800, x = densitiesn, colour = "n = 800")) +
+  geom_line(aes(y = X1600, x = densitiesn, colour = "n = 1600")) +
+  geom_point(aes(y = X1600, x = densitiesn, colour = "n = 1600")) + 
+  scale_color_discrete(name = "Sample Size") +
+  labs(x = "Density", y = "Length")
 ```
 
