@@ -105,6 +105,8 @@ plot(quantiles, q1, type = "o", pch = 16, ylab = "Length", xlab = expression("p"
 
 ```
 
+The above graph demonstrates that in a standard normal distribution, the length of the middle 95% of the sample distribution decreases as you approach the mean. The mean usually has one of the lowest values of length in a standard normal distribution, ie. the median has the tightest distribution in a normal distribution. 
+
 Now, to understand the relationship between density and the corresponding quantile, we just need to transform our x-axis values. We first use the qnorm function and dnorm function on the list of quantiles being tested for to generate a list of densities. I created a function called density that takes in a vector of quantiles and the type (either exponential or normal) of distribution. I use toe qnorm and dnorm function to calculate the density for the normal distribution and the qexp and dexp functions for the exponential distributions. 
 
 ```{r normal_density}
@@ -133,6 +135,7 @@ densitiesn
 plot(densitiesn, q1, type = "p", pch = 16, xlab = "Density", ylab = "Length")
 ```
 
+As can be seen from the graph above, the length of the middle 95% of the sample distribution decreases as the density increases. 
 
 ```{r notes, include=FALSE}
 #Notes
@@ -222,6 +225,8 @@ plot(densitiese, q2, type = "o", pch = 16, xlab = "Density", ylab = "Length")
 
 ```
 
+As can be seen from the graph above, the length of the middle 95% of the sample distribution increases as you move towards the higher quantiles. The opposite relationship is true for the case of density. As density increases, the length of the middle 95% of the distribution decreases. 
+
 # Distribution 3 - Mixture Distribution using Normal Distributions
 
 The mixture distribution using nomral distributions is also built into the quantilelength function as seen above. Here, let's see what function is being used to generate the mixture distribution. The function rf3 creates a mixture distribution by sampling and combining 3 different standard normal distributions. The process of finding the density is different for mixture distributions as you cannot just add the inverses for each of the parts of the distribution. I create a function called den1 that calculates the root for the corresponding quantiles using the pf3 function and the uniroot function. These roots are then transformed using the df3 function to create a vector densitiesMN containing the densities for the associated quantiles. 
@@ -266,9 +271,11 @@ plot(quantiles, q3, type = "o", pch = 16, ylab = "Length", xlab = expression("p"
 plot(densitiesMN, q3, type = "p", pch = 16, xlab = "Density", ylab = "Length")
 ```
 
+This particular mixture distribtion follows a pattern where the length decreases as you approach the median, but increases again towards the 75th percentile and decreases again to a low towards the 90th percentile. Generally, the length decreases as density increases. 
+
 ## Distribution 4 - Mixture Distribution using Beta Distributions
 
-The mixture distribution using beta distributions is also built into the quantilelength function as seen above. Here, let's see what function is being used to generate the mixture distribution. The function rf4 creates a mixture distribution by sampling and combining 2 different beta distributions distributions. The density function den2 follows the same principles of the function den1 to calculate the root of the quantiles. Those roots are then transformed using the df4 function to calculate the corresponding densities. 
+The mixture distribution using beta distributions is also built into the quantilelength function as seen above. Here, let's see what function is being used to generate the mixture distribution. The function rf4 creates a mixture distribution by sampling and combinin2 different beta distributions distributions. The density function den2 follows the same principles of the function den1 to calculate the root of the quantiles. Those roots are then transformed using the df4 function to calculate the corresponding densities. 
 
 ```{r mixture_beta}
 
@@ -305,6 +312,8 @@ q4 <- quantilelength(200, 5000, quantiles, "mixture_beta")
 plot(quantiles, q4, type = "o", pch = 16, ylab = "Length", xlab = expression("p"^th*"quantile"))
 plot(densitiesBD, q4, type = "p", pch = 16, xlab = "Density", ylab = "Length")
 ```
+
+In the case of this mixture distribution, the length increases towards the median to a maximum and decreases towards the tails. Generally, as density increases, length decreases. 
 
 ## Changing Sample Size
 
@@ -348,4 +357,10 @@ ggplot(multiplot) +
   scale_color_discrete(name = "Sample Size") +
   labs(x = "Density", y = "Length")
 ```
+
+As can be seen from the graph above, as the sample size is increased, the length of the middle 95% of the decreases as the sample size increases, and follows the same pattern in general for each sample size. This makes sense as the sample size increases, uncertainty decreases in estimates of quartiles. Changing sample size and the relationship between density and length follows the same trend, where increasing sample size leads to a decrease in length, but following the same trend of decreasing length as density increases. 
+
+## When does the median have the tightest distribution?
+
+As can be interpreted from the graphs above, the lowest length value seen for the median can be seen in normal distributions. The opposite is true for the mixture beta distribution, where the length of the middle 95% of the distribution is the longest at the median.
 
