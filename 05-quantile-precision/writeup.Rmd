@@ -50,7 +50,7 @@ Using the above figures, we will be able to answer the following questions:
 
 In order to make the following computations for each of the types of distributions easier, we will first create a function that can take in certain parameters and give an output of the length of the middle 95% of the sampling distribution for a set of quantiles. 
 
-We first need to be able to generate the length of the middle 95% of the sampling distribution for a single quantile. The quantiles that we will be sampling for in this post are 0.05, 0.20, 0.35, 0.5, 0.65, 0.80, and 0.95. 
+We first need to be able to generate the length of the middle 95% of the sampling distribution for a single quantile. The quantiles that we will be sampling for in this post range from 0.05, to 0.95, by intervals of 0.05. 
 
 In the code below, I create a function called single_quantile, that takes in 4 parameters; 'n', which is the sample size, the number of draws in the sampling distribution, quant, the quantile being tested and the type of distribution we are testing for. In the function, we first create a blank vector that is the length of the number of draws. We then iterate through a for loop for each draw. In this for loop, we first check which type of distribution we are testing for, and then follow the steps used to calculate the result for each of the distributions. In the case of the Standard Normal Distribution, we are using the rnorm function to generate a random normal distribution. Similarly, for the Exponential distribution, we use the rexp function to generate the distribution. The mixed normal and mixed beta functions are more complicated and are further discussed in the corresponding sections. 
 
