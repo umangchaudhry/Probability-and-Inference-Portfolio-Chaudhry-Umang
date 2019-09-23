@@ -447,7 +447,7 @@ summary {
 <p>Questions to answer:</p>
 <ol style="list-style-type: decimal">
 <li><p>Compute analytically the probability that the Braves win the world series when the sequence of game locations is {NYC, NYC, ATL, ATL, ATL, NYC, NYC}. (The code below computes the probability for the alternative sequence of game locations. <strong>Note:</strong> The code uses <code>data.table</code> syntax, which may be new to you. This is intential, as a gentle way to introduce <code>data.table</code>.) Calculate the probability with and without home field advantage when <em>P</em><sub><em>B</em></sub> = 0.55. What is the difference in probabilities?</p>
-<p>In this method of trying to compute the probability that the Braves win the wrold series given a certain sequence of game locations, we use and modify the below code chunk provided to us. First, a data frame containing all the possible world series outcomes is read in. A home field indicator is established, which indicates what the series of playing home and away games would be. Variables for the probability of winning a single game, the advantage multiplier (10% advantage), the probability of winning a home game and an away game are created. Then we calculate the probability of each possible outcome in a series of 7 games, given a home field indicator and the subsequent advantage multiplier for that game location for the Braves. Another column containing the probability of winning each possible outcome is added to the initial data frame. The sum of the probability of winning or losing each game provides the probability of winning or losing the world series.</p></li>
+<p>In this method of trying to compute the probability that the Braves win the wrold series given a certain sequence of game locations, we use and modify the below code chunk provided to us. First, a data frame containing all the possible world series outcomes is read in. A home field indicator is established, which indicates what the series of playing home and away games would be. Variables for the probability of winning a single game, the advantage multiplier (10% advantage) (equal to 1 for no advantage), the probability of winning a home game and an away game are created. Then we calculate the probability of each possible outcome in a series of 7 games, given the home field indicator and the advantage multiplier. Another column containing the probability of winning each possible outcome is added to the initial data frame. The sum of the probability of winning or losing each game provides the probability of winning or losing the world series.</p></li>
 </ol>
 <pre class="r"><code>require(dplyr)
 require(data.table)
@@ -460,7 +460,7 @@ hfi2 &lt;- c(0,0,1,1,1,0,0) #{NYC, NYC, ATL, ATL, ATL, NYC, NYC}
 
 # P_B
 pb &lt;- 0.55
-advantage_multiplier &lt;- 1.1 # Set = 1 for no advantage
+advantage_multiplier &lt;- 1 # Set = 1 for no advantage
 pbh &lt;- 0.55*advantage_multiplier
 pba &lt;- 1 - (1 - 0.55)*advantage_multiplier
 
@@ -485,18 +485,18 @@ for(i in 1:nrow(apo)){
 # Probability of overall World Series outcomes
 AWinWithoutAd &lt;- apo[, sum(p), overall_outcome]
 print(paste0(&quot;Probability of winning without the home field advantage = &quot;, AWinWithoutAd$V1[[1]]))</code></pre>
-<pre><code>## [1] &quot;Probability of winning without the home field advantage = 0.604220971613655&quot;</code></pre>
+<pre><code>## [1] &quot;Probability of winning without the home field advantage = 0.608287796875001&quot;</code></pre>
 <pre class="r"><code># Calculate the probability of each possible outcome for hfi2 without home field advantage
 # P_B
 pb &lt;- 0.55
-advantage_multiplier &lt;- 1 # Set = 1 for no advantage
+advantage_multiplier &lt;- 1.1 # Set = 1 for no advantage
 pbh &lt;- 0.55*advantage_multiplier
 pba &lt;- 1 - (1 - 0.55)*advantage_multiplier
 apo[, p := NA_real_] # Initialize new column in apo to store prob
 for(i in 1:nrow(apo)){
   prob_game &lt;- rep(1, 7)
   for(j in 1:7){
-    p_win &lt;- ifelse(hfi1[j], pbh, pba) #Change hfi depending on what series is running
+    p_win &lt;- ifelse(hfi2[j], pbh, pba) #Change hfi depending on what series is running
     prob_game[j] &lt;- case_when(
         apo[i,j,with=FALSE] == &quot;W&quot; ~ p_win
       , apo[i,j,with=FALSE] == &quot;L&quot; ~ 1 - p_win
@@ -512,19 +512,14 @@ for(i in 1:nrow(apo)){
 # Probability of overall World Series outcomes
 AWinWithAd &lt;- apo[, sum(p), overall_outcome]
 print(paste0(&quot;Probability of winning with the home field advantage = &quot;, AWinWithAd$V1[[1]]))</code></pre>
-<pre><code>## [1] &quot;Probability of winning with the home field advantage = 0.608287796875001&quot;</code></pre>
-<p>The probability of the Braves winning the world series given the home field advantage (More games were played at ATL than NYC) was 0.6082878, whlie the probability of them winning without the home field advantage was 0.604221, given that the probability of winning any single game without the home field advantage is 0.55 and with the advantage is 0.55 plus a 10% advantage. The difference between the probabilities is 0.0040668.</p>
+<pre><code>## [1] &quot;Probability of winning with the home field advantage = 0.604220971613655&quot;</code></pre>
+<p>The probability of the Braves winning the world series given the home field advantage (More games were played at ATL than NYC) was 0.604221, whlie the probability of them winning without the home field advantage was 0.6082878, given that the probability of winning any single game without the home field advantage is 0.55 and with the advantage is 0.55 plus a 10% advantage. The difference between the probabilities is 0.0040668.</p>
 <ol start="2" style="list-style-type: decimal">
 <li><p>Calculate the same probabilities as the previous question by simulation.</p>
 <p>Now, we will calculate the probabilities generated above by the process of simulation. We will use the same variables as earlier to indicate the probability of winning a single game, the advantage multiplier (10% advantage), the probability of winning a home game and an away game. W first create a function called world series that takes in 3 parameters - the home field indicator, the probability of winning a single game (Set to 0.55 as default, unless specified), and the advantage multiplier (Set to 1 as default, unless specified). This function records the number of wins and losses, and runs a 7 game simulation of the world series. Depending on the home field indicator, the probability of winning an away or home game is set, indexing through the home field indicator. It records the game outcome using the random binomial R function to generate a win or a loss, given the probability of winning that single game depending on the home field advantage. The number of wins and losses are updated, and if the Braves win or lose, the series is ended and the probability of winning is reported.</p>
 <p>Now that we have a function that simulates a single world series, we can simulate 100,000 runs of the world series to determine the average chance of winning the world series depending on home field advantage. We sample through all the simulatiosn, recording a win or loss of the world series in a vector called brave.win. The mean of the values in the vector will give the probability of winning the world series depeding on home field advantage.</p></li>
 </ol>
-<pre class="r"><code>pb &lt;- 0.55
-advantage_multiplier &lt;- 1.1 # Set = 1 for no advantage
-pbh &lt;- 0.55*advantage_multiplier
-pba &lt;- 1 - (1 - 0.55)*advantage_multiplier
-
-#default
+<pre class="r"><code>#default
 world_series &lt;- function(hfi, pb=0.55, advantage_multiplier=1) { 
   wins &lt;- 0
   games &lt;- 0
@@ -552,11 +547,11 @@ num.seq &lt;-
 brave.win &lt;- rep(NA, sims)
 
 for (i in 1:sims) {
-    brave.win[i] &lt;- world_series(hfi = hfi2, advantage_multiplier = 1.1)
+    brave.win[i] &lt;- world_series(hfi = hfi2, advantage_multiplier = 1)
 }
 WinWithoutAd &lt;- mean(brave.win)
 print(paste0(&quot;Probability of winning without the home field advantage = &quot;, WinWithoutAd))</code></pre>
-<pre><code>## [1] &quot;Probability of winning without the home field advantage = 0.604687&quot;</code></pre>
+<pre><code>## [1] &quot;Probability of winning without the home field advantage = 0.607968&quot;</code></pre>
 <pre class="r"><code>###
 
 sims &lt;- 1000000 #increase this
@@ -565,11 +560,11 @@ num.seq &lt;-
 brave.win &lt;- rep(NA, sims)
 
 for (i in 1:sims) {
-    brave.win[i] &lt;- world_series(hfi = hfi1, advantage_multiplier = 1.1)
+    brave.win[i] &lt;- world_series(hfi = hfi2, advantage_multiplier = 1.1)
 }
 WinWithAd &lt;- mean(brave.win)
 print(paste0(&quot;Probability of winning with the home field advantage = &quot;, WinWithAd))</code></pre>
-<pre><code>## [1] &quot;Probability of winning with the home field advantage = 0.63476&quot;</code></pre>
+<pre><code>## [1] &quot;Probability of winning with the home field advantage = 0.604257&quot;</code></pre>
 <pre class="r"><code>#########
 #sims &lt;- 100000 #increase this
 #num.seq &lt;-
@@ -584,7 +579,7 @@ print(paste0(&quot;Probability of winning with the home field advantage = &quot;
 #}
 
 #mean(brave.win)</code></pre>
-<p>The probability of the Braves winning the world series given the home field advantage (More games were played at ATL than NYC) was 0.63476, whlie the probability of them winning without the home field advantage was 0.604687, given that the probability of winning any single game without the home field advantage is 0.55 and with the advantage is 0.55 plus a 10% advantage.</p>
+<p>The probability of the Braves winning the world series given the home field advantage (More games were played at ATL than NYC) was 0.604257, whlie the probability of them winning without the home field advantage was 0.607968, given that the probability of winning any single game without the home field advantage is 0.55 and with the advantage is 0.55 plus a 10% advantage.</p>
 <ol start="3" style="list-style-type: decimal">
 <li>What is the absolute and relative error for your simulation in the previous question?</li>
 </ol>

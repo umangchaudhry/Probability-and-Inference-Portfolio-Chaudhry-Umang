@@ -85,7 +85,7 @@ hfi2 <- c(0,0,1,1,1,0,0) #{NYC, NYC, ATL, ATL, ATL, NYC, NYC}
 
 # P_B
 pb <- 0.55
-advantage_multiplier <- 1.1 # Set = 1 for no advantage
+advantage_multiplier <- 1 # Set = 1 for no advantage
 pbh <- 0.55*advantage_multiplier
 pba <- 1 - (1 - 0.55)*advantage_multiplier
 
@@ -114,14 +114,14 @@ print(paste0("Probability of winning without the home field advantage = ", AWinW
 # Calculate the probability of each possible outcome for hfi2 without home field advantage
 # P_B
 pb <- 0.55
-advantage_multiplier <- 1 # Set = 1 for no advantage
+advantage_multiplier <- 1.1 # Set = 1 for no advantage
 pbh <- 0.55*advantage_multiplier
 pba <- 1 - (1 - 0.55)*advantage_multiplier
 apo[, p := NA_real_] # Initialize new column in apo to store prob
 for(i in 1:nrow(apo)){
   prob_game <- rep(1, 7)
   for(j in 1:7){
-    p_win <- ifelse(hfi1[j], pbh, pba) #Change hfi depending on what series is running
+    p_win <- ifelse(hfi2[j], pbh, pba) #Change hfi depending on what series is running
     prob_game[j] <- case_when(
         apo[i,j,with=FALSE] == "W" ~ p_win
       , apo[i,j,with=FALSE] == "L" ~ 1 - p_win
@@ -149,11 +149,6 @@ The probability of the Braves winning the world series given the home field adva
     Now that we have a function that simulates a single world series, we can simulate 100,000 runs of the world series to determine the average chance of winning the world series depending on home field advantage. We sample through all the simulatiosn, recording a win or loss of the world series in a vector called brave.win. The mean of the values in the vector will give the probability of winning the world series depeding on home field advantage. 
 
 ```{r}
-pb <- 0.55
-advantage_multiplier <- 1.1 # Set = 1 for no advantage
-pbh <- 0.55*advantage_multiplier
-pba <- 1 - (1 - 0.55)*advantage_multiplier
-
 #default
 world_series <- function(hfi, pb=0.55, advantage_multiplier=1) { 
   wins <- 0
@@ -182,7 +177,7 @@ num.seq <-
 brave.win <- rep(NA, sims)
 
 for (i in 1:sims) {
-    brave.win[i] <- world_series(hfi = hfi2, advantage_multiplier = 1.1)
+    brave.win[i] <- world_series(hfi = hfi2, advantage_multiplier = 1)
 }
 WinWithoutAd <- mean(brave.win)
 print(paste0("Probability of winning without the home field advantage = ", WinWithoutAd))
@@ -195,7 +190,7 @@ num.seq <-
 brave.win <- rep(NA, sims)
 
 for (i in 1:sims) {
-    brave.win[i] <- world_series(hfi = hfi1, advantage_multiplier = 1.1)
+    brave.win[i] <- world_series(hfi = hfi2, advantage_multiplier = 1.1)
 }
 WinWithAd <- mean(brave.win)
 print(paste0("Probability of winning with the home field advantage = ", WinWithAd))
