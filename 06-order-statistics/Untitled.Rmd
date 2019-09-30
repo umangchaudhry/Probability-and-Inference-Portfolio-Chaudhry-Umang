@@ -1,0 +1,45 @@
+---
+title: "Sequential and Parallel Systems"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+draws <- rep(NA, 50000)
+for (i in seq_along(draws)) {
+  draws[i] <- min(rweibull(3, shape = 1.3, scale = 2))
+}
+
+hist(draws)
+
+pweibull(3,1.3,2)
+
+
+drawsmax <- rep(NA, 50000)
+for (i in seq_along(draws)) {
+  drawsmax[i] <- max(rweibull(3, shape = 1.3, scale = 2))
+}
+
+hist(drawsmax)
+
+
+
+hist(draws, breaks = 1000, freq = FALSE, main = "")
+curve(fk(x, 1, 3), lwd = 3, add = TRUE, col = "blue")
+
+
+hist(drawsmax, breaks = 1000, freq = FALSE, main = "")
+curve(fk(x, 3, 3), lwd = 3, add = TRUE, col = "blue")
+
+fk <- function(x,k,n){
+  k*
+  choose(n,k)*
+  (pweibull(x, 1.3, 2))^(k-1)*
+  (1-pweibull(x, 1.3, 2))^(n-k)*
+  dweibull(x, 1.3, 2)
+}
+
+
+
+```
+
