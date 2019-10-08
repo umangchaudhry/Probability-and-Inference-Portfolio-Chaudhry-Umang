@@ -123,13 +123,15 @@ The same principle is used here, and it can be seen that the density function us
 **Q:** One very common way to compare a random sample to a theoretical candidate distribution is the QQ plot. It is created by ploting quantiles of the theoretical distribution on the x-axis and empirical quantiles from the sample on the y-axis.
 
 ```{r}
-x <- quantile(meds)
-y <- quantile(meds2)
+p <- ppoints(200)
+x <- qorder(p)
+y <- quantile(meds, probs = p)
 
 plot(x,y, asp = 1)
 abline(0,1)
 ```
 
+On the Q-Q plot above, the quantiles of the theoretical distribution on the x-axis and empirical quantiles from the sample on the y-axis are plotted on the x=y line, showing the deviation from theoretical candidate distribution. 
 
 If sample and theoretical quantiles come from the same distribution, then the plotted points will fall along the line *y* = *x*, approximately. Here are two examples when the sample and theoretical quantiles came from the same distribution.
 
@@ -140,12 +142,8 @@ q_candidate <- qexp
 x <- q_candidate((1:200)/200)
 y <- quantile(random_sample, probs = (1:200)/200)
 
-
-
-
 plot(x,y, asp = 1)
 abline(0,1)
-
 ```
 
 ``` {r}
@@ -206,16 +204,54 @@ abline(0,1)
 
 **Q:** Generate the QQ plot for simulated data from the sampling distribution of the sample max and the theoretical largest order statistic distribution.
 ```{r}
+N <- 200
+M <- 5000
+out <- array(rnorm(M*N), c(M,N))
+maxs <- apply(out,1,max)
 
+p <- ppoints(200)
+x <- qorder(p, 200, 200)
+y <- quantile(maxs, probs = p)
+
+plot(x, y, asp = 1, xlab = "Theoretical quantile", ylab = "Sample quantile")
+abline(0,1)
 ```
 
 **Q:** Modify the `dorder`, `porder`, and `qorder` functions so that the functions take new parameters `dist` and `...` so that the functions will work for any continuous distribution that has `d` and `p` functions defined in R.
 ```{r}
+dorder <- function(x, k, n, dist = "norm", ...){
+  
+  pf <- get(paste0("p", dist))
+  df <- get(paste0("d", dist))
 
+# Slide 50 of transformations & order-statistics  
+  k*
+  choose(n,k)*
+  (pf(x, ...))^(k-1)*
+  (1-pf(x, ...))^(n-k)*
+  df(x)
+}
+
+
+porder <- function(x, k, n, dist = "norm", ...){
+  pf <- get(paste0("p", dist))
+
+# Slide 54 of transformations & order-statistics  
+  pbinom(k-1, n, pf(x, ...), lower.tail = FALSE)
+}
+
+qorder <- function(p, k, n, dist = "norm", ...){
+  out <- p
+  for(i in seq_along(p)){
+    out[i] <- uniroot(function(x){porder(x, k, n, dist, ...) - p[i]}, c(-100,100))$root
+  }
+  out
+}
 ```
 
 **Q:** Use the newly modified functions to plot the probability and density functions for the sample min (*N* = 200).
 ```{r}
-
+curve(porder(x, 1, 200), -5,0, ylab = "Probability", xlab = "Minimum")
+curve(dorder(x, 1, 200), -5,0, ylab = "Density", xlab = "Minimum")
 ```
 
