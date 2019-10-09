@@ -201,7 +201,7 @@ for(a in 1:20) {
   earnings_over_time[a] <- one_series(B = 200, W = 300, L = 1000, M = 100) %>% length
 }
 
-plot (seq(10,200,10), earnings_over_time-200, xlab = "Number of Plays", ylab = "Earnings")
+plot (seq(10,200,10), earnings_over_time-200, xlab = "Wager Number", ylab = "Earnings")
 
 ```
 
@@ -229,7 +229,7 @@ walk_out_money1 <- rep(NA, 10)
 for(j in 1:10){
   walk_out_money1[j] <- replicate(1000, one_series(B = 200, W = 300, L = j*100, M = 100) %>% mean())  %>%  get_last()
 }
-plot(x=seq(100,1000,100), y=walk_out_money1-200, xlab = "Number of Plays", ylab = "Earnings", type = "o")
+plot(x=seq(100,1000,100), y=walk_out_money1-200, xlab = "Max Number of Plays Allowed", ylab = "Earnings", type = "o")
 ```
 
 ``` {r changing_variableM, include=TRUE}
@@ -238,7 +238,7 @@ walk_out_money2 <- rep(NA, 10)
 for(j in 1:10){
   walk_out_money2[j] <- replicate(1000, one_series(B = 200, W = 300, L = 1000, M = j*10) %>% mean()) %>% get_last() 
 }
-plot(x=seq(10,100,10), y=walk_out_money2-200, xlab = "Number of Plays", ylab = "Earnings", type = "o")
+plot(x=seq(10,100,10), y=walk_out_money2-200, xlab = "Wager Limit", ylab = "Earnings", type = "o")
 ```
 
 ``` {r changing_variableB, include=TRUE}
@@ -247,7 +247,7 @@ walk_out_money3 <- rep(NA, 10)
 for(j in 1:10){
   walk_out_money3[j] <- replicate(100, one_series(B = j*20, W = 300, L = 1000, M = 100) %>% mean()) %>% get_last()
 }
-plot(x=seq(10,100,10), y=walk_out_money3-200, xlab = "Number of Plays", ylab = "Earnings", type = "o")
+plot(x=seq(10,100,10), y=walk_out_money3-200, xlab = "Budget", ylab = "Earnings", type = "o")
 ```
 
 ``` {r changing_variableW, include=TRUE}
@@ -256,7 +256,7 @@ walk_out_money4 <- rep(NA, 10)
 for(j in 1:10){
   walk_out_money4[j] <- replicate(1000, one_series(B = 200, W = j*30, L = 1000, M = 100) %>% mean()) %>% get_last()
 }
-plot(x=seq(10,100,10), y=walk_out_money4-200, xlab = "Number of Plays", ylab = "Earnings", type = "o")
+plot(x=seq(10,100,10), y=walk_out_money4-200, xlab = "Winning Threshold", ylab = "Earnings", type = "o")
 ```
 
 The variables are changed multiple times, checking what would happen as they change, using a for loop that iterates a set number of times to give multiple results of the money the player walks out with. 
