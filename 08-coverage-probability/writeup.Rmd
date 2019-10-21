@@ -109,7 +109,7 @@ parameters <- boot.meds.ci(parameters)
 ```
 
 
-```{r}
+```{r capture_median}
 capture_median <- function(parameter){
   # Hard coded 0 as parameter of interest
   1*(parameter$CI[1] < 0 & 0 < parameter$CI[2])
@@ -171,7 +171,7 @@ captures <- foreach(
   , .combine = c
   , .packages = c('dplyr') # Need to indicate which packages
 ) %dopar% {
-  parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
+  true.parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
 }
 mean(captures)
 stopCluster(cl)
