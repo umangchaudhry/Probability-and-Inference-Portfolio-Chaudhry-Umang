@@ -121,8 +121,95 @@ parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
 ```
 
 
+```{r working_solution}
+
+generate_data <- function(parameters) {
+  rnorm(parameters[1], parameters[2], parameters[3])
+}
+
+capture_median <- function(ci) {
+  1*(ci[1] < 0 & 0 < ci[2])
+}
+
+est.mle <- function(data) {
+  mle.mean <- mean(data)
+  mle.sd <- sqrt(((length(data)-1)/length(data))*var(data))
+  return(c(length(data), mle.mean, mle.sd))
+}
+
+boot.meds.ci <- function(parameters) {
+  R <- 5000 
+  sample.meds <- NA
+  for (i in 1:R) {
+      sample.meds[i] <- parameters %>% generate_data() %>% median()
+  }
+  quantile(sample.meds, c(0.025, 0.975))
+}
+
+N <- 201
+pop.mean <- 0
+pop.sd <- 1
+true.parameters <- c(N, mean = pop.mean, sd = pop.sd)
+true.parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
+```
 
 
+```{r parallel_run}
+parameters <- list(n = 201, dist = "rnorm", mean = 0, sd = 1)
+require(foreach)
+require(dplyr)
+# Create parallel backend
+require(doParallel)
+cores_2_use <- detectCores() -1
+# Create parallel backend
+cl <- makeCluster(cores_2_use)
+clusterSetRNGStream(cl, 2344)
+registerDoParallel(cl)
+
+captures <- foreach(
+    i = 1:1000
+  , .combine = c
+  , .packages = c('dplyr') # Need to indicate which packages
+) %dopar% {
+  parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
+}
+mean(captures)
+stopCluster(cl)
+```
+
+----------------------------
+
+```{r class}
+#N %>% generate_data %>% est.mle %>% boot.capture
+
+#in boot capture(generate fhat data %>% get_ci %>% capture_median)
+#generate_data
+
+N <- 201
+pop.mean <- 0
+pop.sample <- rnorm(N,pop.mean,1)
+#mle_calculation
+mle.sd <- sqrt((N-1)/N)*var(pop.sample) #outside loops
+mle.mean <- mean(pop.sample) #outside loops
+
+capture <- NA
+for(j in 1:10000) {
+    out <- rep(NA, 10000)
+  for (i in 1:10000) {
+    Fhat.sample <- rnorm(N, mean = mle.mean, sd = mle.sd)
+    out[i] <- median(Fhat.sample)
+  }
+    gen.ci <- quantile(out, c(0.025, 0.975))
+
+capture[j] <- (gen.ci[1] < 0 & gen.ci[2] > 0)
+}
+
+mean(capture)
+#next
+capture
+
+
+```
 
 ```{r boot_ci}
 boot_ci <- function(parameter){
@@ -163,98 +250,6 @@ capture_median <- function(parameter){
 }
 capture_median(parameters)
 ```
-
-
-
-```{r parallel_run}
-parameters <- list(n = 201, dist = "rnorm", mean = 0, sd = 1)
-require(foreach)
-require(dplyr)
-# Create parallel backend
-require(doParallel)
-cores_2_use <- detectCores() -1
-# Create parallel backend
-cl <- makeCluster(cores_2_use)
-clusterSetRNGStream(cl, 2344)
-registerDoParallel(cl)
-
-captures <- foreach(
-    i = 1:1000
-  , .combine = c
-  , .packages = c('dplyr') # Need to indicate which packages
-) %dopar% {
-  parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
-}
-mean(captures)
-stopCluster(cl)
-```
-
-
-```{r class}
-#N %>% generate_data %>% est.mle %>% boot.capture
-
-#in boot capture(generate fhat data %>% get_ci %>% capture_median)
-#generate_data
-
-N <- 201
-pop.mean <- 0
-pop.sample <- rnorm(N,pop.mean,1)
-#mle_calculation
-mle.sd <- sqrt((N-1)/N)*var(pop.sample) #outside loops
-mle.mean <- mean(pop.sample) #outside loops
-
-capture <- NA
-for(j in 1:10000) {
-    out <- rep(NA, 10000)
-  for (i in 1:10000) {
-    Fhat.sample <- rnorm(N, mean = mle.mean, sd = mle.sd)
-    out[i] <- median(Fhat.sample)
-  }
-    gen.ci <- quantile(out, c(0.025, 0.975))
-
-capture[j] <- (gen.ci[1] < 0 & gen.ci[2] > 0)
-}
-
-mean(capture)
-#next
-capture
-
-
-```
-
-
-```{r}
-
-generate_data <- function(parameters) {
-  rnorm(parameters[1], parameters[2], parameters[3])
-}
-
-capture_median <- function(ci) {
-  1*(ci[1] < 0 & 0 < ci[2])
-}
-
-est.mle <- function(data) {
-  mle.mean <- mean(data)
-  mle.sd <- sqrt(((length(data)-1)/length(data))*var(data))
-  return(c(length(data), mle.mean, mle.sd))
-}
-
-boot.meds.ci <- function(parameters) {
-  R <- 5000 
-  sample.meds <- NA
-  for (i in 1:R) {
-      sample.meds[i] <- parameters %>% generate_data() %>% median()
-  }
-  quantile(sample.meds, c(0.025, 0.975))
-}
-
-N <- 201
-pop.mean <- 0
-pop.sd <- 1
-true.parameters <- c(N, mean = pop.mean, sd = pop.sd)
-true.parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
-```
-
 
 ----------------------------
 
