@@ -2,6 +2,9 @@
 title: "Blog Post - Coverage Probability"
 output: html_notebook
 ---
+```{r}
+library(tidyverse)
+```
 
 # Introduction
 
@@ -59,7 +62,9 @@ approximated sampling distribution.
 ## Generating a single sample
 
 ```{r parameters}
-parameters <- list(n = 200, dist = "rnorm", mean = 0, sd = 1, summary = "median")
+
+parameters <- list(n = 201, dist = "rnorm", mean = 0, sd = 1)
+
 ```
 
 ```{r generate_data}
@@ -73,7 +78,51 @@ generate_data <- function(parameter) {
 parameters <- generate_data(parameters)
 ```
 
+## Estimating the MLE
+
+```{r est.mle}
+est.mle <- function(parameter) {
+  data <- parameter$data
+  parameter$mean <- mean(data)
+  parameter$sd <- sqrt(((length(data)-1)/length(data))*var(data))
+  return(parameter)
+}
+
+parameters <- est.mle(parameters)
+```
+
 ## Constructing the Confidence Intervals
+
+```{r boot_meds_ci}
+boot.meds.ci <- function(parameter) {
+  R <- 5000 
+  sample.meds <- NA
+  for (i in 1:R) {
+      sample.data <- parameters %>% generate_data()
+      sample.meds[i] <- sample.data$data %>% median
+  }
+  parameter$CI <- quantile(sample.meds, c(0.025, 0.975))
+  return(parameter)
+}
+
+parameters <- boot.meds.ci(parameters)
+```
+
+
+```{r}
+capture_median <- function(parameter){
+  # Hard coded 0 as parameter of interest
+  1*(parameter$CI[1] < 0 & 0 < parameter$CI[2])
+}
+
+capture_median(parameters)
+
+parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
+```
+
+
+
+
 
 ```{r boot_ci}
 boot_ci <- function(parameter){
@@ -117,13 +166,8 @@ capture_median(parameters)
 
 
 
-```{r capture_param}
-capture_param <- function () {
-   
-}
-```
-
-```{r}
+```{r parallel_run}
+parameters <- list(n = 201, dist = "rnorm", mean = 0, sd = 1)
 require(foreach)
 require(dplyr)
 # Create parallel backend
@@ -134,14 +178,12 @@ cl <- makeCluster(cores_2_use)
 clusterSetRNGStream(cl, 2344)
 registerDoParallel(cl)
 
-
-
 captures <- foreach(
-    i = 1:100
+    i = 1:1000
   , .combine = c
   , .packages = c('dplyr') # Need to indicate which packages
 ) %dopar% {
-  true.parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
+  parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
 }
 mean(captures)
 stopCluster(cl)
