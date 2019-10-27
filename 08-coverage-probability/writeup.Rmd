@@ -2,8 +2,12 @@
 title: "Blog Post - Coverage Probability"
 output: html_notebook
 ---
-```{r}
+
+```{r load_packages, message=FALSE, warning=FALSE}
 library(tidyverse)
+library(foreach)
+library(dplyr)
+library(doParallel)
 ```
 
 # Introduction
@@ -58,6 +62,9 @@ approximated sampling distribution.
 
 **Step 5:** Perform the simulation and report the results.
 
+**Step 6:** Describe how you might change the simulation to learn more
+about the operating characteristics of your chosen method for
+constructing the 95% confidence interval.
 
 ## Generating a single sample
 
@@ -78,18 +85,24 @@ generate_data <- function(parameter) {
 parameters <- generate_data(parameters)
 ```
 
+In the first code chunk above, I create a list called parameters that I will pass to the generate_data function. This contains the sample size 'n', the type of distribution 'dist', a value for the mean, and a value for the standard deviation 'sd'. 
+
+In the generate_data function, I check which distribution I am creating a sample for, and generate a standard normal distribution using the rnorm function and the parameters being passed in. I then add this data back into the list in a sub-list called data. 
+
 ## Estimating the MLE
 
 ```{r est.mle}
 est.mle <- function(parameter) {
   data <- parameter$data
-  parameter$mean <- mean(data)
-  parameter$sd <- sqrt(((length(data)-1)/length(data))*var(data))
+  parameter$mean_mle <- mean(data)
+  parameter$sd_mle <- var(data)
   return(parameter)
 }
 
 parameters <- est.mle(parameters)
 ```
+
+To estimate the MLE, I update the mean and standard deviation using the mean and standard deviation functions in R to capture the real mean and standard deviation of the data generated using the generate_data function. These values are stored in elements called mean_mle and sd_mle and are stored within the parameter list being passed through these functions. 
 
 ## Constructing the Confidence Intervals
 
@@ -98,8 +111,7 @@ boot.meds.ci <- function(parameter) {
   R <- 5000 
   sample.meds <- NA
   for (i in 1:R) {
-      sample.data <- parameters %>% generate_data()
-      sample.meds[i] <- sample.data$data %>% median
+      sample.meds[i] <- parameter %>% with(rnorm(n = n, mean = mean_mle, sd = sd_mle) %>% median)
   }
   parameter$CI <- quantile(sample.meds, c(0.025, 0.975))
   return(parameter)
@@ -108,51 +120,28 @@ boot.meds.ci <- function(parameter) {
 parameters <- boot.meds.ci(parameters)
 ```
 
+Using the bootstrap method, I sample 5000 medians of the data created using the rnorm function with the updated mean and sd from the MLE function, and use the quantile function to estimate the middle 95% confidence interval for the median. This confidence interval is then stored in the parameter list in an element called CI. 
+
+## Capture Medians/Summary Statistic
 
 ```{r capture_median}
 capture_median <- function(parameter){
   # Hard coded 0 as parameter of interest
-  1*(parameter$CI[1] < 0 & 0 < parameter$CI[2])
+  if(parameter$CI[1] < 0 & 0 < parameter$CI[2]) {
+    count = 1
+  } else {
+    count = 0
+  }
+  return(count)
 }
-
 capture_median(parameters)
 
 parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
 ```
 
+I then determine whether the generated confidence interval falls within the required range surrounding 0. If it is within the range, I return a variable count with the value 1, otherwise I return a 0. 
 
-```{r working_solution}
-
-generate_data <- function(parameters) {
-  rnorm(parameters[1], parameters[2], parameters[3])
-}
-
-capture_median <- function(ci) {
-  1*(ci[1] < 0 & 0 < ci[2])
-}
-
-est.mle <- function(data) {
-  mle.mean <- mean(data)
-  mle.sd <- sqrt(((length(data)-1)/length(data))*var(data))
-  return(c(length(data), mle.mean, mle.sd))
-}
-
-boot.meds.ci <- function(parameters) {
-  R <- 5000 
-  sample.meds <- NA
-  for (i in 1:R) {
-      sample.meds[i] <- parameters %>% generate_data() %>% median()
-  }
-  quantile(sample.meds, c(0.025, 0.975))
-}
-
-N <- 201
-pop.mean <- 0
-pop.sd <- 1
-true.parameters <- c(N, mean = pop.mean, sd = pop.sd)
-true.parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
-```
-
+To simulate the run of these above functions to determine the average coverage probability, I use parallel processing to run the pipeline of parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median 5000 times. I store the result of capture_median in a vector called captures. The mean of the vector captures will give the coverage probability. 
 
 ```{r parallel_run}
 parameters <- list(n = 201, dist = "rnorm", mean = 0, sd = 1)
@@ -167,94 +156,15 @@ clusterSetRNGStream(cl, 2344)
 registerDoParallel(cl)
 
 captures <- foreach(
-    i = 1:1000
+    i = 1:5000
   , .combine = c
   , .packages = c('dplyr') # Need to indicate which packages
 ) %dopar% {
-  true.parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
+  parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
 }
 mean(captures)
 stopCluster(cl)
+captures
 ```
 
-----------------------------
-
-```{r class}
-#N %>% generate_data %>% est.mle %>% boot.capture
-
-#in boot capture(generate fhat data %>% get_ci %>% capture_median)
-#generate_data
-
-N <- 201
-pop.mean <- 0
-pop.sample <- rnorm(N,pop.mean,1)
-#mle_calculation
-mle.sd <- sqrt((N-1)/N)*var(pop.sample) #outside loops
-mle.mean <- mean(pop.sample) #outside loops
-
-capture <- NA
-for(j in 1:10000) {
-    out <- rep(NA, 10000)
-  for (i in 1:10000) {
-    Fhat.sample <- rnorm(N, mean = mle.mean, sd = mle.sd)
-    out[i] <- median(Fhat.sample)
-  }
-    gen.ci <- quantile(out, c(0.025, 0.975))
-
-capture[j] <- (gen.ci[1] < 0 & gen.ci[2] > 0)
-}
-
-mean(capture)
-#next
-capture
-
-
-```
-
-```{r boot_ci}
-boot_ci <- function(parameter){
-  # Hard coded number of draws
-  R <- 5000
-  # Set median as default summary measure
-  sm <- get(parameter$summary)
-  sampdist <- rep(NA, R)
-  for(i in 1:R){
-    b <- sample(parameter$data, length(parameter$data), replace = TRUE)
-    sampdist[i] <- sm(b)
-  }
-  # Hard coded symmetric density interval
-  parameter$CI <- quantile(sampdist, c(0.025, 0.975))
-  return(parameter)
-}
-
-parameters <- boot_ci(parameters)
-```
-
-```{r construct_ci}
-construct_ci <- function(parameter) {
-  if (parameter$dist == "rnorm") {
-    parameter$F_hat <- ((parameter$n - 1)/parameter$n)*var(parameter$data)
-  }
-  return(parameter)
-}
-
-parameters <- construct_ci(parameters)
-
-
-```
-
-```{r}
-capture_median <- function(parameter){
-  # Hard coded 0 as parameter of interest
-  1*(parameter$CI[1] < 0 & 0 < parameter$CI[2])
-}
-capture_median(parameters)
-```
-
-----------------------------
-
-
-
-**Step 6:** Describe how you might change the simulation to learn more
-about the operating characteristics of your chosen method for
-constructing the 95% confidence interval.
+As can be seen from the result of the simulation above, there is about a 98.34% coverage probability of the 95% confidence interval of the median when computed from *F̂*<sub>*X*</sub><sup>*m**l**e*</sup>.

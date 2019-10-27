@@ -1,0 +1,179 @@
+---
+title: "notes"
+output: html_notebook
+---
+
+----------------------------
+
+```{r class}
+#N %>% generate_data %>% est.mle %>% boot.capture
+
+#in boot capture(generate fhat data %>% get_ci %>% capture_median)
+#generate_data
+
+N <- 201
+pop.mean <- 0
+pop.sample <- rnorm(N,pop.mean,1)
+#mle_calculation
+mle.sd <- sqrt((N-1)/N)*var(pop.sample) #outside loops
+mle.mean <- mean(pop.sample) #outside loops
+
+capture <- NA
+for(j in 1:10000) {
+    out <- rep(NA, 10000)
+  for (i in 1:10000) {
+    Fhat.sample <- rnorm(N, mean = mle.mean, sd = mle.sd)
+    out[i] <- median(Fhat.sample)
+  }
+    gen.ci <- quantile(out, c(0.025, 0.975))
+
+capture[j] <- (gen.ci[1] < 0 & gen.ci[2] > 0)
+}
+
+mean(capture)
+#next
+capture
+
+
+```
+
+```{r boot_ci}
+boot_ci <- function(parameter){
+  # Hard coded number of draws
+  R <- 5000
+  # Set median as default summary measure
+  sm <- get(parameter$summary)
+  sampdist <- rep(NA, R)
+  for(i in 1:R){
+    b <- sample(parameter$data, length(parameter$data), replace = TRUE)
+    sampdist[i] <- sm(b)
+  }
+  # Hard coded symmetric density interval
+  parameter$CI <- quantile(sampdist, c(0.025, 0.975))
+  return(parameter)
+}
+
+parameters <- boot_ci(parameters)
+```
+
+```{r class_boot_scr_bun}
+Hmisc::getHdata(nhgh)
+scr <- nhgh$SCr
+R <- 5000
+mediansSCR <- rep(NA, R)
+mediansBUN <- rep(NA, R)
+for (i in 1:R) {
+  splScr <- sample(scr, length(scr), replace = TRUE)
+  mediansSCR[i] <- median(splScr, na.rm = TRUE)
+}
+CIScR <- quantile(mediansSCR, c(0.025, 0.975))
+CIScR
+
+#-----MLE
+mean_mle <- mean(scr, na.rm = TRUE)
+sd_mle <- sd(scr, na.rm = TRUE)
+medians <- rep(NA, R)
+for (i in 1:R) {
+  spl <- rnorm(length(scr), mean = mean_mle, sd = sd_mle)
+  medians[i] <- median(spl, na.rm = TRUE)
+}
+CI <- quantile(medians, c(0.025, 0.975))
+CI
+
+#------Method of moments exponential
+rate_mm <- 1/mean(scr, na.rm = TRUE)
+medianse <- rep(NA, R)
+for (i in 1:R) {
+  sple <- rexp(length(scr), rate = rate_mm)
+  medianse[i] <- median(sple, na.rm = TRUE)
+}
+CIe <- quantile(medianse, c(0.025, 0.975))
+CIe #Wrong Distribution
+
+
+
+#-----
+  
+bun <- nhgh$bun
+R <- 5000
+mediansBUN <- rep(NA, R)
+for (i in 1:R) {
+  spBUN <- sample(bun, length(bun), replace = TRUE)
+  mediansBUN[i] <- median(spBUN, na.rm = TRUE)
+}
+
+CIBUN <- quantile(mediansBUN, c(0.025, 0.975))
+CIBUN
+
+
+
+#-----means
+R <- 5000
+means <- rep(NA, R)  
+mean_mle <- mean(scr, na.rm = TRUE)
+sd_mle <- sd(scr, na.rm = TRUE)
+for (i in 1:R) {
+  spl <- rnorm(length(scr), mean = mean_mle, sd = sd_mle)
+  means[i] <- mean(spl, na.rm = TRUE)
+}
+CI <- quantile(means, c(0.025, 0.975))
+CI
+
+# t-test
+
+t.test(scr)
+```
+
+```{r construct_ci}
+construct_ci <- function(parameter) {
+  if (parameter$dist == "rnorm") {
+    parameter$F_hat <- ((parameter$n - 1)/parameter$n)*var(parameter$data)
+  }
+  return(parameter)
+}
+
+parameters <- construct_ci(parameters)
+
+
+```
+
+```{r}
+capture_median <- function(parameter){
+  # Hard coded 0 as parameter of interest
+  1*(parameter$CI[1] < 0 & 0 < parameter$CI[2])
+}
+capture_median(parameters)
+```
+
+```{r working_solution}
+
+generate_data <- function(parameters) {
+  rnorm(parameters[1], parameters[2], parameters[3])
+}
+
+capture_median <- function(ci) {
+  1*(ci[1] < 0 & 0 < ci[2])
+}
+
+est.mle <- function(data) {
+  mle.mean <- mean(data)
+  mle.sd <- sqrt(((length(data)-1)/length(data))*var(data))
+  return(c(length(data), mle.mean, mle.sd))
+}
+
+boot.meds.ci <- function(parameters) {
+  R <- 5000 
+  sample.meds <- NA
+  for (i in 1:R) {
+      sample.meds[i] <- parameters %>% generate_data() %>% median()
+  }
+  quantile(sample.meds, c(0.025, 0.975))
+}
+
+N <- 201
+pop.mean <- 0
+pop.sd <- 1
+true.parameters <- c(N, mean = pop.mean, sd = pop.sd)
+true.parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
+```
+----------------------------
