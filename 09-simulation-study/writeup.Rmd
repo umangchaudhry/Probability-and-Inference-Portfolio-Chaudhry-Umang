@@ -1,5 +1,136 @@
 ---
-title: "writeup"
+title: "Blog Post - Simulation Study"
 output: html_notebook
 ---
 
+```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(foreach)
+library(dplyr)
+library(doParallel)
+```
+
+Coverage probability is an important operating characteristic of methods for constructing interval estimates, particularly confidence intervals. Idealy, a 95% confidence interval will capture the population parameter of interest in 95% of samples. One can also calculate 80% or 90% confidence intervals. In general, an X% confidence interval should capture the population parameter of interest in X% of samples. 
+
+In the last blog post, we looked at one specific method of determining the coverage probability and generating confidence intervals - A true underlying distribution that was standard normal, estimated using MLE and looking at only one parameter of interest - the Median. In this blog post, we will examine more models and parameters, and determine which models are better. 
+
+# Not all methods are equally good
+
+In this blog post, we will perform a 2 × 4 × 2 factorial simulation
+study to compare the coverage probability of various methods of
+calculating **90%** confidence intervals. The three factors in the
+experiment are
+
+1.  True, underlying distribution
+    -   standard normal
+    -   gamma(shape = 1.4, scale = 3)
+2.  Model
+    -   method of moments with normal
+    -   method of moments with gamma
+    -   kernel density estimation
+    -   bootstrap
+3.  Parameter of interest
+    -   sample min (1st order statistic)
+    -   median
+
+Other settings in the experiment that will not change are:
+
+-   Sample size, *N* = 201
+-   *Outside the loop* estimation
+
+## Parameter List
+
+We will take the same approach towards this experiment as last time, passing a list of parameters that are updated through each function. Compared to last time, each function will be more complex and will perform different tasks based on the parameters passed to it. In the below code chunk is a preliminary list that will be tested as the functions are created. 
+
+```{r parameter_list}
+parameters <- list(n = 201, dist = "normal", mean = 0, sd = 1, shape = 1.4, scale = 3, model = "bootstrap", stat = "median")
+```
+
+## Generating the data
+
+In the generate_data function, I check which distribution I am creating a sample for, and generate a standard normal distribution using the rnorm function and the parameters being passed in. I then add this data back into the list in a sub-list called data. 
+
+```{r generate_data}
+generate_data <- function(parameter) {
+  if (parameter$dist == "normal") {
+     parameter$data <- rnorm(parameter$n, parameter$mean, parameter$sd) 
+  } else if (parameter$dist == "gamma") {
+    parameter$data <- rgamma(parameter$n, parameter$shape, parameter$scale)
+  }
+  return(parameter)
+}
+
+parameters <- generate_data(parameters)
+```
+
+## Estimating Confidence Intervals - Models
+
+```{r estimate_CI}
+estimate_CI <- function(parameter) {
+  R <- 5000
+  if (parameter$model == "moments_normal") {
+    stat <- get(parameter$stat)
+    data <- parameter$data
+    parameter$mean_MN <- mean(data)
+    parameter$sd_MN <- sqrt(var(data))
+    sample.stat <- rep(NA, R)
+    for (i in 1:R) {
+      pdata <-
+        rnorm(n = parameter$n,
+              mean = parameter$mean_MN,
+              sd = parameter$sd_MN)
+      sample.stat[i] <- stat(pdata)
+    }
+    parameter$CI <- quantile(sample.stat, c(0.05, 0.95))
+    return(parameter)
+  }
+  else if (parameter$model == "moments_gamma") {
+    stat <- get(parameter$stat)
+    data <- parameter$data
+    parameter$shape_MG <- ((mean(data)) ^ 2) / var(data)
+    parameter$scale_MG <- var(data) / mean(data)
+    sample.stat <- rep(NA, R)
+    for (i in 1:R) {
+      pdata <-
+        rgamma(
+          n = parameter$n,
+          shape = parameter$shape_MG,
+          scale = parameter$scale_MG
+        )
+      sample.stat[i] <- stat(pdata)
+    }
+    parameter$CI <- quantile(sample.stat, c(0.05, 0.95))
+    return(parameter)
+  }
+  else if (parameter$model == "bootstrap") {
+    sm <- get(parameter$stat)
+    sampdist <- rep(NA, R)
+    for (i in 1:R) {
+      b <- sample(parameter$data, length(parameter$data), replace = TRUE)
+      sampdist[i] <- sm(b)
+    }
+    parameter$CI <- quantile(sampdist, c(0.05, 0.95))
+    return(parameter)
+  }
+  else if (parameter$model == "KDE") {
+    return(NA)
+  }
+}
+
+parameters <- estimate_CI(parameters)
+```
+
+```{r capture_stat}
+capture_stat <- function(parameter){
+  # Hard coded 0 as parameter of interest
+  if(parameter$CI[1] < 0 & 0 < parameter$CI[2]) {
+    count = 1
+  } else {
+    count = 0
+  }
+  return(count)
+}
+
+capture_stat(parameters)
+parameters %>% generate_data %>% estimate_CI %>% capture_stat
+```
