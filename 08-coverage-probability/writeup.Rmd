@@ -162,9 +162,9 @@ captures <- foreach(
 ) %dopar% {
   parameters %>% generate_data %>% est.mle %>% boot.meds.ci %>% capture_median
 }
-mean(captures)
+Coverage_Probability <- mean(captures)
 stopCluster(cl)
-captures
+Coverage_Probability
 ```
 
 As can be seen from the result of the simulation above, there is about a 98.34% coverage probability of the 95% confidence interval of the median when computed from *F̂*<sub>*X*</sub><sup>*m**l**e*</sup>.
