@@ -43,7 +43,7 @@ Other settings in the experiment that will not change are:
 We will take the same approach towards this experiment as last time, passing a list of parameters that are updated through each function. Compared to last time, each function will be more complex and will perform different tasks based on the parameters passed to it. In the below code chunk is a preliminary list that will be tested as the functions are created. 
 
 ```{r parameter_list}
-parameters <- list(n = 201, dist = "gamma", mean = 0, sd = 1, shape = 1.4, scale = 3, model = "bootstrap", stat = "median", smoo = 0.3, R = 5000)
+parameters <- list(n = 201, dist = "gamma", mean = 0, sd = 1, shape = 1.4, scale = 3, model = "moments_gamma", stat = "median", smoo = 0.3, R = 5000)
 parameters %>% generate_data %>% estimate_CI %>% capture_stat
 ```
 
@@ -56,7 +56,7 @@ generate_data <- function(parameter) {
   if (parameter$dist == "normal") {
      parameter$data <- rnorm(parameter$n, parameter$mean, parameter$sd) 
   } else if (parameter$dist == "gamma") {
-    parameter$data <- rgamma(parameter$n, parameter$shape, parameter$scale)
+    parameter$data <- rgamma(n = parameters$n, shape = parameters$shape, scale = parameters$scale)
   }
   return(parameter)
 }
@@ -68,16 +68,16 @@ parameters <- generate_data(parameters)
 
 ```{r estimate_CI}
 estimate_CI <- function(parameter) {
-  data <- parameter$data
-  sm <- get(parameter$stat)
-  
-  if (parameter$dist == "gamma" &
-      parameter$model == "moments_normal") {
+  data <- parameters$data
+  sm <- get(parameters$stat)
+  parameter$sumstat <- sm(data)
+  if (parameter$dist == "nomal" &
+      parameter$model == "moments_gamma") {
     parameter$CI <- NA
     return(parameter)
   }
   
-  else if (parameter$model == "moments_normal" & parameter$dist == "normal") {
+  else if (parameter$model == "moments_normal") {
     #browser()
     parameter$mean_MN <- mean(data)
     parameter$sd_MN <- sd(data)
@@ -97,7 +97,7 @@ estimate_CI <- function(parameter) {
       parameter$CI <- NA
       return(parameter)
     } else {
-      parameter$shape_MG <- mean(data) ^ 2 / var(data)
+      parameter$shape_MG <- (mean(data) ^ 2) / var(data)
       parameter$scale_MG <- var(data) / mean(data)
       sim.data <-
         array(
@@ -170,8 +170,8 @@ capture_stat <- function(parameter) {
       dim = c(parameter$n, 10000)
     ), 2, min))
   
-  if (parameter$dist == "gamma" &
-      parameter$model == "moments_normal") {
+  if (parameter$dist == "normal" &
+      parameter$model == "moments_gamma") {
     return (NA)
   }
   
@@ -201,8 +201,8 @@ capture_stat <- function(parameter) {
     }
   } else if (parameter$dist == "gamma") {
     if (parameter$stat == "median") {
-      if (parameter$CI[1] < true.gamma.med &
-          true.gamma.med < parameter$CI[2]) {
+      if (parameters$CI[1] < true.gamma.med &
+          true.gamma.med < parameters$CI[2]) {
         count = 1
       } else {
         count = 0
