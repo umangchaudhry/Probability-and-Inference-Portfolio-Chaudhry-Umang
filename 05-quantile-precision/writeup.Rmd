@@ -362,5 +362,5 @@ As can be seen from the graph above, as the sample size is increased, the length
 
 ## When does the median have the tightest distribution?
 
-As can be interpreted from the graphs above, the lowest length value seen for the median can be seen in normal distributions. The opposite is true for the mixture beta distribution, where the length of the middle 95% of the distribution is the longest at the median.
+As can be interpreted from the graphs above, the lowest length value seen for the median can be seen in normal distributions. The opposite is true for the mixture beta distribution, where the length of the middle 95% of the distribution is the longest at the median. 
 

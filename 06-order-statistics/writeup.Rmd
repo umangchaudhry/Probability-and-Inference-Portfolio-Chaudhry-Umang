@@ -210,7 +210,7 @@ out <- array(rnorm(M*N), c(M,N))
 maxs <- apply(out,1,max)
 
 p <- ppoints(200)
-x <- qorder(p, 200, 200)
+x <- qorder(p)
 y <- quantile(maxs, probs = p)
 
 plot(x, y, asp = 1, xlab = "Theoretical quantile", ylab = "Sample quantile")
