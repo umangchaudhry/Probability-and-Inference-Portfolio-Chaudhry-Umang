@@ -1,78 +1,37 @@
----
-title: "Blog Post - Simulation Study"
-output: html_notebook
----
-
-```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
 library(tidyverse)
 library(foreach)
 library(dplyr)
 library(doParallel)
-```
 
-Coverage probability is an important operating characteristic of methods for constructing interval estimates, particularly confidence intervals. Idealy, a 95% confidence interval will capture the population parameter of interest in 95% of samples. One can also calculate 80% or 90% confidence intervals. In general, an X% confidence interval should capture the population parameter of interest in X% of samples. 
+args <- commandArgs(trailingOnly = TRUE)
+args <- as.numeric(args)
 
-In the last blog post, we looked at one specific method of determining the coverage probability and generating confidence intervals - A true underlying distribution that was standard normal, estimated using MLE and looking at only one parameter of interest - the Median. In this blog post, we will examine more models and parameters, and determine which models are better. 
+parameters <-
+  list(
+    n = 201,
+    dist = "normal",
+    mean = 0,
+    sd = 1,
+    shape = 1.4,
+    scale = 3,
+    model = "KDE",
+    stat = "median",
+    smoo = 0.3,
+    R = 5000
+  )
 
-# Not all methods are equally good
-
-In this blog post, we will perform a 2 × 4 × 2 factorial simulation
-study to compare the coverage probability of various methods of
-calculating **90%** confidence intervals. The three factors in the
-experiment are
-
-1.  True, underlying distribution
-    -   standard normal
-    -   gamma(shape = 1.4, scale = 3)
-2.  Model
-    -   method of moments with normal
-    -   method of moments with gamma
-    -   kernel density estimation
-    -   bootstrap
-3.  Parameter of interest
-    -   sample min (1st order statistic)
-    -   median
-
-Other settings in the experiment that will not change are:
-
--   Sample size, *N* = 201
--   *Outside the loop* estimation
-
-## Parameter List
-
-We will take the same approach towards this experiment as last time, passing a list of parameters that are updated through each function. Compared to last time, each function will be more complex and will perform different tasks based on the parameters passed to it. In the below code chunk is a preliminary list that will be tested as the functions are created. 
-
-```{r parameter_list}
-parameters <- list(n = 201, dist = "normal", mean = 0, sd = 1, shape = 1.4, scale = 3, model = "KDE", stat = "median", smoo = 0.3, R = 5000)
-
-#parameters %>% generate_data %>% estimate_CI %>% capture_stat
-
-parameters <- generate_data(parameters)
-parameters <- estimate_CI(parameters)
-capture_stat(parameters)
-```
-
-## Generating the data
-
-In the generate_data function, I check which distribution I am creating a sample for, and generate a standard normal distribution using the rnorm function and the parameters being passed in. I then add this data back into the list in a sub-list called data. 
-
-```{r generate_data}
 generate_data <- function(parameter) {
   if (parameter$dist == "normal") {
-     parameter$data <- rnorm(parameter$n, parameter$mean, parameter$sd) 
+    parameter$data <- rnorm(parameter$n, parameter$mean, parameter$sd)
   } else if (parameter$dist == "gamma") {
-    parameter$data <- rgamma(n = parameter$n, shape = parameter$shape, scale = parameter$scale)
+    parameter$data <-
+      rgamma(n = parameter$n,
+             shape = parameter$shape,
+             scale = parameter$scale)
   }
   return(parameter)
 }
 
-parameters <- generate_data(parameters)
-
-```
-
-## Estimating Confidence Intervals - Models
-
-```{r estimate_CI}
 estimate_CI <- function(parameter) {
   data <- parameter$data
   sm <- get(parameter$stat)
@@ -90,7 +49,11 @@ estimate_CI <- function(parameter) {
     samp.dist <- NA
     sim.data <-
       array(
-        rnorm(parameter$n*parameter$R, parameter$mean_MN, parameter$sd_MN),
+        rnorm(
+          parameter$n * parameter$R,
+          parameter$mean_MN,
+          parameter$sd_MN
+        ),
         dim = c(parameter$n, parameter$R)
       )
     samp.dist <- apply(sim.data, 2, FUN = sm)
@@ -138,7 +101,7 @@ estimate_CI <- function(parameter) {
     }
     
     tbl <-
-      data.frame(x = seq(min(data) - 2*sd(data), max(data) + 2*sd(data), by = 0.01))
+      data.frame(x = seq(min(data) - 2 * sd(data), max(data) + 2 * sd(data), by = 0.01))
     tbl$p <- ecdfstar(tbl$x, data, parameter$smoo)
     tbl <- tbl[!duplicated(tbl$p), ]
     tbl$p[1] <- -Inf
@@ -150,7 +113,8 @@ estimate_CI <- function(parameter) {
     }
     
     U <- runif(parameter$n * parameter$R)
-    sim.data <- array(qkde(U, tbl), dim = c(parameter$n, parameter$R))
+    sim.data <-
+      array(qkde(U, tbl), dim = c(parameter$n, parameter$R))
     samp.dist <- apply(sim.data, 2, FUN = sm)
     #browser()
     sum(is.na(samp.dist))
@@ -159,10 +123,6 @@ estimate_CI <- function(parameter) {
   }
 }
 
-# parameters <- estimate_CI(parameters)
-```
-
-```{r capture_stat}
 capture_stat <- function(parameter) {
   true.norm.med <- qnorm(0.5)
   true.norm.min <-
@@ -227,14 +187,17 @@ capture_stat <- function(parameter) {
   }
 }
 
-# capture_stat(parameters)
-# parameters %>% generate_data %>% estimate_CI %>% capture_stat
-```
+sim.settings <-
+  expand.grid(
+    dist = c("normal", "gamma"),
+    model = c("moments_normal", "moments_gamma", "bootstrap", "KDE"),
+    par.int = c("median", "min"),
+    cov.prob = NA,
+    stringsAsFactors = FALSE,
+    KEEP.OUT.ATTRS = FALSE
+  )
 
-```{r sim_run}
-sim.settings <- expand.grid(dist = c("normal", "gamma"), model = c("moments_normal", "moments_gamma", "bootstrap", "KDE"), par.int = c("median", "min"), cov.prob = NA, stringsAsFactors = FALSE, KEEP.OUT.ATTRS = FALSE)
-
-for (k in 1:nrow(sim.settings)) {
+for (k in args) {
   parameters <-
     list(
       n = 201,
@@ -250,10 +213,11 @@ for (k in 1:nrow(sim.settings)) {
     )
   cover <- NA
   for (sims in 1:10) {
-    cover[sims] <- parameters %>% 
+    cover[sims] <- parameters %>%
       generate_data %>% estimate_CI %>% capture_stat
   }
   sim.settings[k, 4] <- mean(cover)
 }
-```
 
+outfile <- "./results/" 
+saveRDS(sim.settings[args, ], file = outfile)
