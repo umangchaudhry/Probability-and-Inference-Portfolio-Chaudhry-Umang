@@ -1,0 +1,69 @@
+---
+title: "Blog Post - Simulation study: Power and sample size calculations correlational studies"
+output:
+  html_document:
+    df_print: paged
+    code_folding: hide
+---
+
+```{r load_libraries, include=FALSE}
+suppressPackageStartupMessages(require(mvtnorm))
+library(tidyverse)
+library(ggplot2)
+```
+
+# Power and Sample Size 
+
+A common research objective is to demonstrate that two measurements are highly correlated. One measurement, call it A, may reflect the severity of disease but is difficult or costly to collect. Another measurement, call it B, may be easier to collect and potentially related to measurement A. If there is strong association between A and B, a cost effective strategy for diagnosis may be to collect measurement B instead of A.
+
+In this blog, we will perform a power and sample size calculation for a collaborator who is submitting a grant application to fund a study to show that two measurements are highly correlated. Reviewers of the grant want to fund studies that have a high likelihood of success, which in this setting is conclusively demonstrating that the correlation between A and B is greater than 0.8.
+
+The researcher will collect both measurements on N individuals. The analysis will proceed by calculating a one-sided confidence interval. If the confidence interval is completely within the range from 0.8 to 1, then the researcher will consider the study to be a success: A conclusive demonstration that the correlation between A and B is greater than 0.8.
+
+## Setup
+
+Power is the probability that the study will end in success when the true underlying correlation is, in fact, greater that 0.8. (Note the connection to Type II error (β): power = 1 - β.) The collaborator needs us to estimate power for different combinations of sample size and the true population correlation. Let the sample size be 25, 50, 75, and 100. Let the population correlation range from 0.8 to 0.95.
+
+## Simulation Study
+
+In the code chunk below, we use a similar approach as we used in our previous posts to set up simulation studies for multiple combinations of parameters. We first create a table using the expand.grid function, to store combinations of sample size, and the population correlation range for 0.8 to 1 to generate a graph that is more easily understandable. 
+
+Then, in a for loop, we create a list of parameters that will be used in the simulation containing N, which is set to the first column of the sim.settings table we just made, Rho, set to the second column, the null_correlation set to 0.8 as demanded by the setup of this study, mu, the mean of the distribution set to 0,0, and R which is the number of times the simulation will run (5000). The for loop runs for the length of the sim.settings table we created. We also store a parameter called sigma that will be used to generate the distribution using a 2x2 array with the values set to 1, rho, rho and 1. Rho will be updated as suggested by sim.settings. We then generate the distribution R times using the rmvnorm function to generate a multivariate normal distribution with the given parameters, and test the confidence interval generated against the null correlation. If the confidence interval is greater than the null correlation, we store a 1, else a 0. We repeat this process R times and take the mean of the results generated, and store it in a third column of sim.settings called power. 
+```{r}
+sim.settings <-
+  expand.grid(
+    N = c(25, 50, 75, 100, 200),
+    rho = seq(0.8, 1.00, by = 0.01),
+    power = NA,
+    stringsAsFactors = FALSE,
+    KEEP.OUT.ATTRS = FALSE
+  )
+
+for (k in 1:nrow(sim.settings)) {
+  parameters <-
+    list(N = sim.settings[k, 1],
+         rho = sim.settings[k, 2],
+         null_correlation = 0.8,
+         mu = c(0,0),
+         R = 5000)
+  parameters$sigma <- array(c(1,parameters$rho,parameters$rho,1), c(2,2)) 
+  detect <- rep(NA, parameters$R)
+  for (i in 1:parameters$R) {
+    data <- rmvnorm(n = parameters$N, mean = parameters$mu, sigma = parameters$sigma)
+    results <-
+      cor.test(x = data[, 1],
+               y = data[, 2],
+               alternative = "greater")
+    detect[i] <- results$conf.int[1] > parameters$null_correlation
+  }
+  sim.settings[k, 3] <- mean(detect)
+}
+```
+
+We use a basic ggplot2 fuction to plot our data, with data set to sim settings, the x axis set to rho, the y axis set to power and the group set to a factor of N. We use the geom_line() function to generate the graph. As can be seen, as N increases, the accuracy of the simulation study (power) gets to 1 (highly correlated), as expected. 
+
+```{r plot}
+ggplot(data= sim.settings, aes(x = rho, y = power, group = N, color = factor(N))) + 
+  geom_line() + labs(x = "Correlation", y = "Power")
+```
+
