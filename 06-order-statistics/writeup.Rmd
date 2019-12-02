@@ -64,7 +64,7 @@ porder <- function(x, k = 100, n = 200){
 }
 
 x <- seq(-3, 3, by = 0.01)
-plot(x,porder(x), type = "l")
+plot(x, porder(x), type = "l")
 lines(x, pnorm(x), col= "red") #DENSITY OF x for a standard normal. black line is density of the median statistic for a random normal distribution.
 
 
@@ -185,6 +185,8 @@ For the assigment, generate a QQ plot for the simulated data of the median relat
 
 Does the simulated data agree with the theoretical sampling distribution?
 
+The simulated data does agree with the theoretical sampling distribution as can be seen from the QQ plots above. The plotted points lie on the x = y line very closely for the most part. 
+
 ```{r}
 random_sample <- rt(200, df = 3)
 q_candidate <- qnorm
@@ -199,7 +201,33 @@ abline(0,1)
 
 **Q:** Modify the `dorder`, `porder`, and `qorder` functions so that the functions take a new parameter `k` (for the *k*<sup>*t**h*</sup> order statistic) so that the functions will work for any order statistic and not just the median.
 ```{r}
-#These functions have already been described using the parameters above. 
+dorder <- function(x, k, n, dist = "norm", ...){
+  
+  pf <- get(paste0("p", dist))
+  df <- get(paste0("d", dist))
+
+# Slide 50 of transformations & order-statistics  
+  k*
+    choose(n, k)*
+    pf(x, ...)^(k-1)*
+    (1-pf(x, ...))^(n-k)*
+    df(x, ...)
+}
+
+porder <- function(x, k, n, dist = "norm", ...){
+  pf <- get(paste0("p", dist))
+
+# Slide 54 of transformations & order-statistics  
+  pbinom(k-1, n, pf(x, ...), lower.tail = FALSE)
+}
+
+qorder <- function(p, k, n, dist = "norm", ...){
+  out <- p
+  for(i in seq_along(p)){
+    out[i] <- uniroot(function(x){porder(x, k, n, dist, ...) - p[i]}, c(-100,100))$root
+  }
+  out
+}
 ```
 
 **Q:** Generate the QQ plot for simulated data from the sampling distribution of the sample max and the theoretical largest order statistic distribution.
@@ -210,7 +238,7 @@ out <- array(rnorm(M*N), c(M,N))
 maxs <- apply(out,1,max)
 
 p <- ppoints(200)
-x <- qorder(p)
+x <- qorder(p, 200, 200)
 y <- quantile(maxs, probs = p)
 
 plot(x, y, asp = 1, xlab = "Theoretical quantile", ylab = "Sample quantile")
