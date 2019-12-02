@@ -29,6 +29,7 @@ Power is the probability that the study will end in success when the true underl
 In the code chunk below, we use a similar approach as we used in our previous posts to set up simulation studies for multiple combinations of parameters. We first create a table using the expand.grid function, to store combinations of sample size, and the population correlation range for 0.8 to 1 to generate a graph that is more easily understandable. 
 
 Then, in a for loop, we create a list of parameters that will be used in the simulation containing N, which is set to the first column of the sim.settings table we just made, Rho, set to the second column, the null_correlation set to 0.8 as demanded by the setup of this study, mu, the mean of the distribution set to 0,0, and R which is the number of times the simulation will run (5000). The for loop runs for the length of the sim.settings table we created. We also store a parameter called sigma that will be used to generate the distribution using a 2x2 array with the values set to 1, rho, rho and 1. Rho will be updated as suggested by sim.settings. We then generate the distribution R times using the rmvnorm function to generate a multivariate normal distribution with the given parameters, and test the confidence interval generated against the null correlation. If the confidence interval is greater than the null correlation, we store a 1, else a 0. We repeat this process R times and take the mean of the results generated, and store it in a third column of sim.settings called power. 
+
 ```{r}
 sim.settings <-
   expand.grid(
@@ -67,3 +68,6 @@ ggplot(data= sim.settings, aes(x = rho, y = power, group = N, color = factor(N))
   geom_line() + labs(x = "Correlation", y = "Power")
 ```
 
+# Conclusion
+
+We can see that as the sample size increases, the power increases. For any specific correlation, power increases with larger sample sizes. This makes sense because because as sample size increases, the sampling distribution is tighter and we have lower variance, and greater precision, and the sampling error reduces as there are smaller differences between the predicted values and the observed values. 
