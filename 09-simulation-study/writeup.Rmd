@@ -1,6 +1,8 @@
 ---
 title: "Blog Post - Simulation Study"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
@@ -45,11 +47,11 @@ We will take the same approach towards this experiment as last time, passing a l
 ```{r parameter_list}
 parameters <- list(n = 201, dist = "normal", mean = 0, sd = 1, shape = 1.4, scale = 3, model = "KDE", stat = "median", smoo = 0.3, R = 5000)
 
-#parameters %>% generate_data %>% estimate_CI %>% capture_stat
-
-parameters <- generate_data(parameters)
-parameters <- estimate_CI(parameters)
-capture_stat(parameters)
+# #parameters %>% generate_data %>% estimate_CI %>% capture_stat
+# 
+# parameters <- generate_data(parameters)
+# parameters <- estimate_CI(parameters)
+# capture_stat(parameters)
 ```
 
 ## Generating the data
@@ -66,7 +68,7 @@ generate_data <- function(parameter) {
   return(parameter)
 }
 
-parameters <- generate_data(parameters)
+# parameters <- generate_data(parameters)
 
 ```
 
@@ -249,11 +251,15 @@ for (k in 1:nrow(sim.settings)) {
       smoo = 0.3
     )
   cover <- NA
-  for (sims in 1:5000) {
+  for (sims in 1:1000) {
     cover[sims] <- parameters %>% 
       generate_data %>% estimate_CI %>% capture_stat
   }
   sim.settings[k, 4] <- mean(cover)
 }
+```
+
+```{r}
+sim.settings
 ```
 

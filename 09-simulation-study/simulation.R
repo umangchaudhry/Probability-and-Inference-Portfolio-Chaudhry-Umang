@@ -212,7 +212,7 @@ for (k in args) {
       smoo = 0.3
     )
   cover <- NA
-  for (sims in 1:5000) {
+  for (sims in 1:10) {
     cover[sims] <- parameters %>%
       generate_data %>% estimate_CI %>% capture_stat
   }
