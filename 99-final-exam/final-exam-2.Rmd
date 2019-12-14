@@ -1,0 +1,190 @@
+---
+title: "Final Exam 2"
+output: html_document
+---
+# Instructions
+
+1. Only complete the sections for which you want a better score.  (Complete all questions within a section.)
+2. After completing the exam:
+   + Delete any sections that you did not complete.
+   + Save the exam as final-exam-2.rmd and final-exam-2.html in the 99-final-exam folder of your Probability and Inference Portfolio repo.
+   + Push your repo.
+   
+# 1. Simulation
+
+The Monte Hall problem is a classic game show.  Contestants on the show where shown three doors.  Behind one randomly selected door was a sportscar; behind the other doors were goats.
+At the start of the game, contestants would select a door, say door A.  Then, the host would open either door B or C to reveal a goat.  At that point in the game, the host would ask the contestant if she would like to change her door selection.  Once a contestant decided to stay or change, the host would open the choosen door to reveal the game prize, either a goat or a car.
+
+In this problem, consider a **modified** version of the Monte Hall problem in which the number of doors is **variable**.  Rather than 3 doors, consider a game with 4 or 5 or 50 doors.  In the modified version of the game, a contestant would select an initial door, say door A.  Then, the host would open **one** of the remaining doors to reveal a goat.  At that point in the game, the host would ask the contestant if she would like to change her door selection.  Once a contestant decided to stay or change, the host would open the choosen door to reveal the game prize, either a goat or a car.
+Consider two strategies:
+  1. Always stay with the first door selected.
+  2. Always switch to the unopened door.
+  
+**C.** The function `game` below plays a single game of Monte Hall.  The function returns a vector of length two, the first element is the prize under strategy 1 and the second element is the prize under strategy 2.  The function has a single input parameter, N, which is the number of doors in the game.
+
+Use the `game` function to estimate the probability that both strategies result in a goat. Let **N=4**.
+
+**HINT:** Create an Rx2 array, and store the results of each game as a row in the array.  Create a cross tabulation of the winnings from strategy 1 and strategy 2.
+
+```{r}
+require(magrittr)
+require(dplyr)
+game <- function(N){
+  if(N<3) stop("Must have at least 3 doors")
+  prize <- sample(c(rep("goat",N-1),"car"), N)
+  guess <- sample(1:N,1)
+  game <- data.frame(door = 1:N, prize = prize, stringsAsFactors = FALSE) %>% 
+    mutate(first_guess = case_when(
+      door == guess ~ 1
+      , TRUE ~ 0
+    )) %>% 
+    mutate(potential_reveal = case_when(
+        first_guess == 1 ~ 0
+      , prize == "car" ~ 0
+      , TRUE ~ 1
+    )) %>% 
+    mutate(reveal = 1*(rank(potential_reveal, ties.method = "random") == 3)) %>% 
+    mutate(potential_switch = case_when(
+      first_guess == 1 ~ 0
+      , reveal == 1 ~ 0
+      , TRUE ~ 1
+    )) %>% 
+    mutate(switch = 1*(rank(potential_switch, ties.method = "random") == 3))
+  c(game$prize[game$first_guess == 1], game$prize[game$switch == 1])
+}
+```
+
+```{r}
+R <- 5000
+outcome1 <- rep(NA, R)
+outcome2 <- rep(NA, R)
+for(i in 1:R)
+{
+  games <- game(4)
+  outcome1[i] <- games[1]
+  outcome2[i] <- games[2]
+}
+
+loseboth <- rep(NA, R)
+for(i in 1:R)
+{
+  if(outcome1[i] == "goat" & outcome2[i] == "goat")
+  {
+    loseboth[i] <- 1
+  }
+  else
+  {
+    loseboth[i] <- 0
+  }
+}
+
+mean(loseboth)
+```
+
+
+**B**. Continuing from part **C**, what is the probability that at least one of the strategies results in winning a car?
+**HINT:** Use the cross tabulation from the previous part to calculate this probability.
+
+```{r}
+R <- 5000
+outcome1 <- rep(NA,R)
+outcome2 <- rep(NA, R)
+for(i in 1:R)
+{
+  games <- game(4)
+  outcome1[i] <- games[1]
+  outcome2[i] <- games[2]
+}
+
+strat1 <- mean(outcome1 == "car")
+strat2 <- mean(outcome2 == "car")
+
+PAtLeast1 <- strat1 + strat2
+PAtLeast1
+```
+
+
+**A**. Communicate the precision of your simulated probability in part **B** by calculating a **99\%** confidence interval.
+**HINT:** Use the CLT short cut.
+
+```{r}
+.5*.75 + .25
+prop.test(PAtLeast1*R, 5000, 0.625, conf.level = 0.99)$conf
+```
+
+
+# 2. Probability
+
+The following table is the joint distribution of computer and operating system preferences of Vanderbilt faculty.
+
+| | Windows | Linux | MacOS |
+|:--|:--:|:--:|:--:|
+| Desktop | .1 | .3 | .3 |
+| Laptop | .1 | .0 | .2 |
+
+**C.** Calculate P(Laptop|Windows).
+
+```{r}
+#Use Bayes Rule
+# P(A|B) = P(B|A)(P(A))/P(B)
+# P(Laptop|Windows) = P(Windows|Laptop)(P(Laptop))/(P(Windows))
+ANS2C = (.1)*(1-(.1+.0+.2))/(.1+.1)
+paste0("P(Laptop|Windows) is: ", ANS2C)
+```
+
+
+**B.** Calculate P(Windows or Linux|Desktop).
+
+```{r}
+#P(A or B) = P(A) + P(B) #Mutually Exclusive Events (Cannot have both windows and linux|desktop)
+#P(windows) = .1+.1
+#P(Linux|Desktop) = P(Desktop|Linux)(P(Desktop))/(P(Linux)) = .3*.7/.3
+.1+.1+(.3*.7/.3)
+```
+
+**A.** Suppose the same probability distribution for students is as follows:
+
+| | Windows | Linux | MacOS |
+|:--|:--:|:--:|:--:|
+| Desktop | .1 | .1 | .1 |
+| Laptop | .2 | .0 | .5 |
+
+If there is 1 faculty member for every 5 Vanderbilt students, what is P(Faculty| Windows desktop or windows laptop)?
+
+```{r}
+pfaculty = 1/5
+pwindows = .1+.2
+#P(Faculty| Windows desktop or windows laptop) = P(windows lap or desk|faculty)(P(faculty))/(P(windows lap or desk))
+ANS2A = (pwindows*pfaculty)*pfaculty/pwindows
+paste0("P(Faculty| Windows desktop or windows laptop)) = ", ANS2A)
+```
+
+
+# 3. Discrete Distributions
+
+Consider a study designed to investigate the effectiveness of a new surgical technique. The study will enroll subjects until five subjects experience an infection after surgery.
+
+**C.** If the risk of infection after surgery is 0.1, what is the probability that the study will enroll 30 or fewer subjects?
+
+```{r}
+dnbinom(30,5,0.1)
+```
+
+**B.** If the risk of infection after surgery is 0.1, what is the expected number of subjects to be enrolled?
+
+```{r}
+R <- 5000
+out <- rep(NA, R)
+for(i in 1:R) {
+  out[i] <- pnbinom(30,5,0.1) %>% mean()
+}
+
+mean(out)
+```
+
+**A.** Suppose the risk of infection after surgery is unknown but equally likely to be either .1 or .2.  What is the probabilty that the risk of infection is .1 if the study ends after enrolling the 50th subject?
+
+```{r}
+dnbinom(50,5,0.1)
+```
+
