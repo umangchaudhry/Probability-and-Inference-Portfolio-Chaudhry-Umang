@@ -444,7 +444,7 @@ for(i in 1:R)
 }
 
 mean(loseboth)</code></pre>
-<pre><code>## [1] 0.3712</code></pre>
+<pre><code>## [1] 0.3638</code></pre>
 <p><strong>B</strong>. Continuing from part <strong>C</strong>, what is the probability that at least one of the strategies results in winning a car? <strong>HINT:</strong> Use the cross tabulation from the previous part to calculate this probability.</p>
 <pre class="r"><code>R &lt;- 5000
 outcome1 &lt;- rep(NA,R)
@@ -461,12 +461,12 @@ strat2 &lt;- mean(outcome2 == &quot;car&quot;)
 
 PAtLeast1 &lt;- strat1 + strat2
 PAtLeast1</code></pre>
-<pre><code>## [1] 0.6218</code></pre>
+<pre><code>## [1] 0.6248</code></pre>
 <p><strong>A</strong>. Communicate the precision of your simulated probability in part <strong>B</strong> by calculating a <strong>99%</strong> confidence interval. <strong>HINT:</strong> Use the CLT short cut.</p>
 <pre class="r"><code>.5*.75 + .25</code></pre>
 <pre><code>## [1] 0.625</code></pre>
 <pre class="r"><code>prop.test(PAtLeast1*R, 5000, 0.625, conf.level = 0.99)$conf</code></pre>
-<pre><code>## [1] 0.6038836 0.6393918
+<pre><code>## [1] 0.6069073 0.6423600
 ## attr(,&quot;conf.level&quot;)
 ## [1] 0.99</code></pre>
 </div>
@@ -498,18 +498,27 @@ PAtLeast1</code></pre>
 </tbody>
 </table>
 <p><strong>C.</strong> Calculate P(Laptop|Windows).</p>
-<pre class="r"><code>#Use Bayes Rule
-# P(A|B) = P(B|A)(P(A))/P(B)
-# P(Laptop|Windows) = P(Windows|Laptop)(P(Laptop))/(P(Windows))
-ANS2C = (.1)*(1-(.1+.0+.2))/(.1+.1)
+<pre class="r"><code>#P(Laptop|Windows) = P(Laptop and Windows = .1) / P(Windows = .1 + .1 = .2)
+ANS2C = .1/.2
 paste0(&quot;P(Laptop|Windows) is: &quot;, ANS2C)</code></pre>
-<pre><code>## [1] &quot;P(Laptop|Windows) is: 0.35&quot;</code></pre>
+<pre><code>## [1] &quot;P(Laptop|Windows) is: 0.5&quot;</code></pre>
 <p><strong>B.</strong> Calculate P(Windows or Linux|Desktop).</p>
-<pre class="r"><code>#P(A or B) = P(A) + P(B) #Mutually Exclusive Events (Cannot have both windows and linux|desktop)
+<pre class="r"><code>#Previous Solution
+#P(A or B) = P(A) + P(B) #Mutually Exclusive Events (Cannot have both windows and linux|desktop)
 #P(windows) = .1+.1
 #P(Linux|Desktop) = P(Desktop|Linux)(P(Desktop))/(P(Linux)) = .3*.7/.3
-.1+.1+(.3*.7/.3)</code></pre>
-<pre><code>## [1] 0.9</code></pre>
+
+#Updated Solution
+#P(Windows or Linux|Desktop) = P(windows Desktop or Linux Desktop)/P(Desktop) = P(Windows Desktop)/P(desktop) + P(Linux Desktop)/P(Desktop)
+
+#P(Windows Desktop) = .1
+#P(Desktop) = .1 + .3 + .3 = .7
+#P(Linux Desktop) = .3
+#P(Windows or Linux|Desktop) = .1/.7 + .3/.7
+
+ANS2B = (.1/.7) + (.3/.7)
+paste0(&quot;P(Windows or Linux|Desktop) is: &quot;, ANS2B)</code></pre>
+<pre><code>## [1] &quot;P(Windows or Linux|Desktop) is: 0.571428571428572&quot;</code></pre>
 <p><strong>A.</strong> Suppose the same probability distribution for students is as follows:</p>
 <table>
 <thead>
@@ -536,31 +545,55 @@ paste0(&quot;P(Laptop|Windows) is: &quot;, ANS2C)</code></pre>
 </tbody>
 </table>
 <p>If there is 1 faculty member for every 5 Vanderbilt students, what is P(Faculty| Windows desktop or windows laptop)?</p>
-<pre class="r"><code>pfaculty = 1/5
-pwindows = .1+.2
+<pre class="r"><code>#Previous Solution
 #P(Faculty| Windows desktop or windows laptop) = P(windows lap or desk|faculty)(P(faculty))/(P(windows lap or desk))
-ANS2A = (pwindows*pfaculty)*pfaculty/pwindows
+#ANS2A = (pwindows*pfaculty)*pfaculty/pwindows
+
+#Updated Solution
+#P(Faculty| Windows desktop or windows laptop) = 
+# A &lt;- P(Faculty)*P(Windows Desktop or windows laptop | Faculty)
+# B &lt;- P(Student)*P(Windows Desktop or Windows Laptop | Student)
+# A/(A+B)
+
+pfaculty = 1/6
+pstudent = 1 - pfaculty
+pwindows = .1+.2
+A &lt;- pfaculty*(pwindows*pfaculty)
+B &lt;- pstudent*(pwindows*pstudent)
+ANS2A = A/(A+B)
+
 paste0(&quot;P(Faculty| Windows desktop or windows laptop)) = &quot;, ANS2A)</code></pre>
-<pre><code>## [1] &quot;P(Faculty| Windows desktop or windows laptop)) = 0.04&quot;</code></pre>
+<pre><code>## [1] &quot;P(Faculty| Windows desktop or windows laptop)) = 0.0384615384615384&quot;</code></pre>
 </div>
 <div id="discrete-distributions" class="section level1">
 <h1>3. Discrete Distributions</h1>
 <p>Consider a study designed to investigate the effectiveness of a new surgical technique. The study will enroll subjects until five subjects experience an infection after surgery.</p>
 <p><strong>C.</strong> If the risk of infection after surgery is 0.1, what is the probability that the study will enroll 30 or fewer subjects?</p>
-<pre class="r"><code>dnbinom(30,5,0.1)</code></pre>
-<pre><code>## [1] 0.01965932</code></pre>
+<pre class="r"><code>pnbinom(30,5,0.1)</code></pre>
+<pre><code>## [1] 0.269251</code></pre>
 <p><strong>B.</strong> If the risk of infection after surgery is 0.1, what is the expected number of subjects to be enrolled?</p>
-<pre class="r"><code>R &lt;- 5000
+<pre class="r"><code>risk_infection &lt;- function(N){
+  risk &lt;- rnbinom(N, 5, 0.1)
+}
+
+R &lt;- 5000
 out &lt;- rep(NA, R)
 for(i in 1:R) {
-  out[i] &lt;- pnbinom(30,5,0.1) %&gt;% mean()
+  out[i] &lt;- risk_infection(1000) %&gt;% mean()
 }
 
 mean(out)</code></pre>
-<pre><code>## [1] 0.269251</code></pre>
+<pre><code>## [1] 45.01594</code></pre>
+<pre class="r"><code>print(&quot;The expected number of subjects to be enrolled is around 45.&quot;)</code></pre>
+<pre><code>## [1] &quot;The expected number of subjects to be enrolled is around 45.&quot;</code></pre>
 <p><strong>A.</strong> Suppose the risk of infection after surgery is unknown but equally likely to be either .1 or .2. What is the probabilty that the risk of infection is .1 if the study ends after enrolling the 50th subject?</p>
-<pre class="r"><code>dnbinom(50,5,0.1)</code></pre>
-<pre><code>## [1] 0.01629887</code></pre>
+<pre class="r"><code># P(p = .1 | x = 45) = P(X = 45 | p = .1) * P(p = .1)
+# P(p = .1) = .5
+# P(p = .2) = .5
+# P(X = 45 | p = .1) * P(p = .1) + P(X = 45 | p = .2)*P(p = .2)
+
+(dnbinom(50,5,0.1)*0.5) + (dnbinom(50,5,0.2)*0.5)</code></pre>
+<pre><code>## [1] 0.008871622</code></pre>
 </div>
 
 

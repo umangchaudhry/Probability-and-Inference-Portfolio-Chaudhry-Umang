@@ -125,10 +125,8 @@ The following table is the joint distribution of computer and operating system p
 **C.** Calculate P(Laptop|Windows).
 
 ```{r}
-#Use Bayes Rule
-# P(A|B) = P(B|A)(P(A))/P(B)
-# P(Laptop|Windows) = P(Windows|Laptop)(P(Laptop))/(P(Windows))
-ANS2C = (.1)*(1-(.1+.0+.2))/(.1+.1)
+#P(Laptop|Windows) = P(Laptop and Windows = .1) / P(Windows = .1 + .1 = .2)
+ANS2C = .1/.2
 paste0("P(Laptop|Windows) is: ", ANS2C)
 ```
 
@@ -136,10 +134,21 @@ paste0("P(Laptop|Windows) is: ", ANS2C)
 **B.** Calculate P(Windows or Linux|Desktop).
 
 ```{r}
+#Previous Solution
 #P(A or B) = P(A) + P(B) #Mutually Exclusive Events (Cannot have both windows and linux|desktop)
 #P(windows) = .1+.1
 #P(Linux|Desktop) = P(Desktop|Linux)(P(Desktop))/(P(Linux)) = .3*.7/.3
-.1+.1+(.3*.7/.3)
+
+#Updated Solution
+#P(Windows or Linux|Desktop) = P(windows Desktop or Linux Desktop)/P(Desktop) = P(Windows Desktop)/P(desktop) + P(Linux Desktop)/P(Desktop)
+
+#P(Windows Desktop) = .1
+#P(Desktop) = .1 + .3 + .3 = .7
+#P(Linux Desktop) = .3
+#P(Windows or Linux|Desktop) = .1/.7 + .3/.7
+
+ANS2B = (.1/.7) + (.3/.7)
+paste0("P(Windows or Linux|Desktop) is: ", ANS2B)
 ```
 
 **A.** Suppose the same probability distribution for students is as follows:
@@ -152,10 +161,23 @@ paste0("P(Laptop|Windows) is: ", ANS2C)
 If there is 1 faculty member for every 5 Vanderbilt students, what is P(Faculty| Windows desktop or windows laptop)?
 
 ```{r}
-pfaculty = 1/5
-pwindows = .1+.2
+#Previous Solution
 #P(Faculty| Windows desktop or windows laptop) = P(windows lap or desk|faculty)(P(faculty))/(P(windows lap or desk))
-ANS2A = (pwindows*pfaculty)*pfaculty/pwindows
+#ANS2A = (pwindows*pfaculty)*pfaculty/pwindows
+
+#Updated Solution
+#P(Faculty| Windows desktop or windows laptop) = 
+# A <- P(Faculty)*P(Windows Desktop or windows laptop | Faculty)
+# B <- P(Student)*P(Windows Desktop or Windows Laptop | Student)
+# A/(A+B)
+
+pfaculty = 1/6
+pstudent = 1 - pfaculty
+pwindows = .1+.2
+A <- pfaculty*(pwindows*pfaculty)
+B <- pstudent*(pwindows*pstudent)
+ANS2A = A/(A+B)
+
 paste0("P(Faculty| Windows desktop or windows laptop)) = ", ANS2A)
 ```
 
@@ -167,24 +189,35 @@ Consider a study designed to investigate the effectiveness of a new surgical tec
 **C.** If the risk of infection after surgery is 0.1, what is the probability that the study will enroll 30 or fewer subjects?
 
 ```{r}
-dnbinom(30,5,0.1)
+pnbinom(30,5,0.1)
 ```
 
 **B.** If the risk of infection after surgery is 0.1, what is the expected number of subjects to be enrolled?
 
 ```{r}
+risk_infection <- function(N){
+  risk <- rnbinom(N, 5, 0.1)
+}
+
 R <- 5000
 out <- rep(NA, R)
 for(i in 1:R) {
-  out[i] <- pnbinom(30,5,0.1) %>% mean()
+  out[i] <- risk_infection(1000) %>% mean()
 }
 
 mean(out)
+
+print("The expected number of subjects to be enrolled is around 45.")
 ```
 
 **A.** Suppose the risk of infection after surgery is unknown but equally likely to be either .1 or .2.  What is the probabilty that the risk of infection is .1 if the study ends after enrolling the 50th subject?
 
 ```{r}
-dnbinom(50,5,0.1)
+# P(p = .1 | x = 45) = P(X = 45 | p = .1) * P(p = .1)
+# P(p = .1) = .5
+# P(p = .2) = .5
+# P(X = 45 | p = .1) * P(p = .1) + P(X = 45 | p = .2)*P(p = .2)
+
+(dnbinom(50,5,0.1)*0.5) + (dnbinom(50,5,0.2)*0.5)
 ```
 
